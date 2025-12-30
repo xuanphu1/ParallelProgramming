@@ -12,6 +12,7 @@
 #include "LPDetector.h"
 #include "LPOCR.h"
 #include "SobelCuda.h"
+#include "SobelSIMD.h"
 
 // Cấu trúc dữ liệu frame trong pipeline
 struct FramePacket {
@@ -75,7 +76,8 @@ private:
     // Các stage
     void captureLoop();
     void sobelLoop();
-    void detectOcrLoop();
+    void detectLoop();      // Tách riêng detection (Task Parallelism)
+    void ocrLoop();         // Tách riêng OCR (Task Parallelism)
     void renderLoop();
 
     // Sobel GPU/CPU
@@ -98,11 +100,14 @@ private:
 
     TSQueue<FramePacket> qCapture_{5};
     TSQueue<FramePacket> qSobel_{5};
-    TSQueue<FramePacket> qDetOcr_{5};
+    TSQueue<FramePacket> qDetect_{5};   // Queue riêng cho detection
+    TSQueue<FramePacket> qOCR_{5};      // Queue riêng cho OCR
+    TSQueue<FramePacket> qRender_{5};   // Queue riêng cho render
 
     std::thread tCapture_;
     std::thread tSobel_;
-    std::thread tDetOcr_;
+    std::thread tDetect_;   // Thread riêng cho detection (Task Parallelism)
+    std::thread tOCR_;      // Thread riêng cho OCR (Task Parallelism)
     std::thread tRender_;
 };
 

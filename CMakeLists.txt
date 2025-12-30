@@ -8,11 +8,31 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(OpenCV REQUIRED)
 message(STATUS "OpenCV version: ${OpenCV_VERSION}")
 
-# -------- LibTorch (PyTorch C++ API) --------
-# Bạn cần đặt CMAKE_PREFIX_PATH tới thư mục libtorch, ví dụ:
-#   cmake -DCMAKE_PREFIX_PATH=/home/phu/libtorch ..
-find_package(Torch REQUIRED)
-message(STATUS "Found LibTorch at: ${TORCH_INSTALL_PREFIX}")
+# -------- ONNX Runtime C++ API --------
+# Bạn cần cài ONNX Runtime C++ hoặc đặt CMAKE_PREFIX_PATH tới thư mục onnxruntime, ví dụ:
+#   cmake -DCMAKE_PREFIX_PATH=/path/to/onnxruntime ..
+# Hoặc cài qua package manager: sudo apt-get install libonnxruntime-dev (nếu có)
+find_path(ONNXRUNTIME_INCLUDE_DIR onnxruntime_cxx_api.h
+    PATHS
+        /usr/include
+        /usr/local/include
+        ${CMAKE_PREFIX_PATH}/include
+)
+
+find_library(ONNXRUNTIME_LIB onnxruntime
+    PATHS
+        /usr/lib
+        /usr/local/lib
+        ${CMAKE_PREFIX_PATH}/lib
+)
+
+if(ONNXRUNTIME_INCLUDE_DIR AND ONNXRUNTIME_LIB)
+    message(STATUS "Found ONNX Runtime: ${ONNXRUNTIME_INCLUDE_DIR}")
+    set(HAS_ONNXRUNTIME TRUE)
+else()
+    message(WARNING "ONNX Runtime not found. Bạn cần cài ONNX Runtime C++ hoặc set CMAKE_PREFIX_PATH.")
+    set(HAS_ONNXRUNTIME FALSE)
+endif()
 
 # -------- OpenMP (cho Sobel CPU song song) --------
 find_package(OpenMP)
@@ -35,6 +55,9 @@ else()
 endif()
 
 include_directories(${OpenCV_INCLUDE_DIRS})
+if(HAS_ONNXRUNTIME)
+    include_directories(${ONNXRUNTIME_INCLUDE_DIR})
+endif()
 
 add_executable(lp_main
     Main/main.cpp
@@ -47,8 +70,13 @@ target_include_directories(lp_main PRIVATE Main)
 
 target_link_libraries(lp_main
     ${OpenCV_LIBS}
-    "${TORCH_LIBRARIES}"
 )
+
+if(HAS_ONNXRUNTIME)
+    target_link_libraries(lp_main ${ONNXRUNTIME_LIB})
+else()
+    message(FATAL_ERROR "ONNX Runtime is required. Please install it or set CMAKE_PREFIX_PATH.")
+endif()
 
 if(HAS_OPENMP)
     target_link_libraries(lp_main OpenMP::OpenMP_CXX)

@@ -3,14 +3,14 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <vector>
-#include <torch/script.h>
+#include <onnxruntime_cxx_api.h>
 
 // Lớp LPOCR: chịu trách nhiệm đọc ký tự biển số từ vùng ảnh đã cắt
-// Dùng model TorchScript export từ LP_ocr_nano_62.pt (YOLOv5 OCR)
+// Dùng model ONNX export từ LP_ocr_nano_62.pt (YOLOv5 OCR)
 class LPOCR {
 public:
-    LPOCR() = default;
-    virtual ~LPOCR() = default;
+    LPOCR();
+    virtual ~LPOCR();
 
     // Khởi tạo / load model, trả về true nếu thành công
     virtual bool initialize(const std::string& modelPath);
@@ -19,7 +19,13 @@ public:
     virtual std::string recognize(const cv::Mat& plateRoi);
 
 private:
-    torch::jit::script::Module module_;
+    Ort::Env env_;
+    Ort::Session* session_ = nullptr;
+    Ort::AllocatorWithDefaultOptions allocator_;
+    std::vector<const char*> inputNames_;
+    std::vector<const char*> outputNames_;
+    std::string inputNameStr_;  // giữ ownership của string
+    std::string outputNameStr_;
     bool initialized_ = false;
     int inputSize_ = 320;        // kích thước input cho OCR (có thể chỉnh nếu cần)
     float confThresh_ = 0.25f;   // ngưỡng confidence ký tự

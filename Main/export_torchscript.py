@@ -28,29 +28,72 @@ OCR_TS = "lp_ocr_ts.pt"
 
 def export_one(ckpt_path: str, ts_out: str, img_size: int = 640) -> None:
     """
-    Load model YOLOv5 qua torch.hub, bỏ AutoShape, trace phần model chính thành TorchScript.
+    Load model YOLOv5 qua torch.hub, export sang ONNX (YOLOv5 hỗ trợ tốt).
     """
     print(f"[EXPORT] Loading YOLOv5 checkpoint: {ckpt_path}")
     # Load đúng như trong run_models.py
     model = torch.hub.load("ultralytics/yolov5", "custom", path=ckpt_path, source="github")
     model.eval()
 
-    # YOLOv5 hub model có wrapper AutoShape; phần mạng chính nằm trong model.model
-    backbone = model.model
-    backbone.eval()
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    backbone.to(device)
-
-    # Input giả cho trace: 1 ảnh 3ximg_size x img_size
-    dummy = torch.zeros(1, 3, img_size, img_size, device=device)
-
-    print(f"[EXPORT] Tracing to TorchScript on device={device}, size={img_size}x{img_size} ...")
-    with torch.no_grad():
-        ts = torch.jit.trace(backbone, dummy)
-
-    ts.save(ts_out)
-    print(f"[EXPORT] Saved TorchScript to: {ts_out}")
+    # Export sang ONNX (YOLOv5 hỗ trợ tốt hơn TorchScript)
+    onnx_path = ts_out.replace(".pt", ".onnx")
+    print(f"[EXPORT] Exporting to ONNX: {onnx_path} (size={img_size}) ...")
+    
+    try:
+        # YOLOv5 model có AutoShape wrapper; export() nằm trong model.model
+        # Hoặc dùng model trực tiếp nếu nó có export()
+        if hasattr(model, 'export'):
+            model.export(format="onnx", imgsz=img_size, simplify=True, opset=12)
+        else:
+            # Thử export từ model.model (backbone)
+            backbone = model.model
+            if hasattr(backbone, 'export'):
+                backbone.export(format="onnx", imgsz=img_size, simplify=True, opset=12)
+            else:
+                # Fallback: dùng ultralytics export utility
+                from pathlib import Path
+                import yaml
+                # Tạo wrapper đơn giản để export
+                class ExportWrapper(torch.nn.Module):
+                    def __init__(self, model):
+                        super().__init__()
+                        self.model = model.model
+                    def forward(self, x):
+                        return self.model(x)
+                
+                wrapper = ExportWrapper(model)
+                wrapper.eval()
+                dummy = torch.zeros(1, 3, img_size, img_size)
+                torch.onnx.export(
+                    wrapper,
+                    dummy,
+                    onnx_path,
+                    input_names=['images'],
+                    output_names=['output'],
+                    opset_version=12,
+                    do_constant_folding=True,
+                    dynamic_axes={'images': {0: 'batch'}, 'output': {0: 'batch'}}
+                )
+        
+        # YOLOv5 export() thường tạo file với tên mặc định, cần rename
+        import os
+        import glob
+        # Tìm file ONNX vừa tạo (thường là tên model + .onnx)
+        onnx_files = glob.glob("*.onnx")
+        if onnx_files:
+            latest_onnx = max(onnx_files, key=os.path.getmtime)
+            if latest_onnx != onnx_path:
+                import shutil
+                shutil.move(latest_onnx, onnx_path)
+                print(f"[EXPORT] Renamed {latest_onnx} -> {onnx_path}")
+        
+        if os.path.exists(onnx_path):
+            print(f"[EXPORT] ✓ ONNX saved: {onnx_path}")
+        else:
+            print(f"[WARNING] Không tìm thấy file ONNX sau khi export.")
+    except Exception as e:
+        print(f"[ERROR] Export ONNX thất bại: {e}")
+        raise
 
 
 def main() -> int:

@@ -15,10 +15,22 @@ bool Pipeline::initialize(const std::string& source,
 
     // Mở nguồn video/camera
     if (source == "0" || source.empty()) {
-        if (!cap_.open(0)) {
-            std::cerr << "Khong the mo camera." << std::endl;
-            return false;
+        // Thử mở camera với V4L2 backend
+        if (!cap_.open(0, cv::CAP_V4L2)) {
+            // Fallback: thử mở không chỉ định backend
+            if (!cap_.open(0)) {
+                std::cerr << "Khong the mo camera. Kiem tra:" << std::endl;
+                std::cerr << "  - Camera co ket noi khong?" << std::endl;
+                std::cerr << "  - Quyen truy cap /dev/video0?" << std::endl;
+                std::cerr << "  - Camera co dang duoc dung boi ung dung khac?" << std::endl;
+                return false;
+            }
         }
+        // Đặt resolution và FPS
+        cap_.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
+        cap_.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+        cap_.set(cv::CAP_PROP_FPS, 30);
+        std::cout << "[Pipeline] Camera da mo thanh cong (V4L2)." << std::endl;
     } else {
         if (!cap_.open(source)) {
             std::cerr << "Khong the mo video: " << source << std::endl;
@@ -57,16 +69,18 @@ void Pipeline::run() {
 
     cv::namedWindow(windowName_, cv::WINDOW_NORMAL);
 
-    // Khởi động các luồng
+    // Khởi động các luồng (Task Parallelism: tách Detection và OCR)
     tCapture_ = std::thread(&Pipeline::captureLoop, this);
     tSobel_   = std::thread(&Pipeline::sobelLoop, this);
-    tDetOcr_  = std::thread(&Pipeline::detectOcrLoop, this);
+    tDetect_  = std::thread(&Pipeline::detectLoop, this);   // Thread riêng cho detection
+    tOCR_     = std::thread(&Pipeline::ocrLoop, this);      // Thread riêng cho OCR
     tRender_  = std::thread(&Pipeline::renderLoop, this);
 
     // Chờ các luồng kết thúc
     tCapture_.join();
     tSobel_.join();
-    tDetOcr_.join();
+    tDetect_.join();
+    tOCR_.join();
     tRender_.join();
 
     cv::destroyWindow(windowName_);
@@ -81,13 +95,23 @@ void Pipeline::stop() {
 // ==================== Các loop ====================
 
 void Pipeline::captureLoop() {
+    int consecutiveFailures = 0;
+    const int maxFailures = 10;
+    
     while (running_.load()) {
         FramePacket pkt;
         if (!cap_.read(pkt.frame) || pkt.frame.empty()) {
-            std::cerr << "[Capture] Het frame hoac loi doc." << std::endl;
-            running_.store(false);
-            break;
+            consecutiveFailures++;
+            if (consecutiveFailures >= maxFailures) {
+                std::cerr << "[Capture] Lien tuc khong doc duoc frame. Dung capture loop." << std::endl;
+                running_.store(false);
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
         }
+        
+        consecutiveFailures = 0; // Reset counter khi đọc được frame
         pkt.frameId = frameCounter_++;
         qCapture_.push(pkt);
     }
@@ -109,12 +133,8 @@ void Pipeline::sobelLoop() {
             gray = pkt.frame;
         }
 
-        if (useGPU_) {
-            if (!sobelCuda(gray, pkt.sobel)) {
-                // fallback CPU nếu CUDA lỗi
-                sobelCPU(gray, pkt.sobel);
-            }
-        } else {
+        // Data Parallelism: Thử SIMD trước, fallback về CPU OpenMP
+        if (!sobelSIMD(gray, pkt.sobel)) {
             sobelCPU(gray, pkt.sobel);
         }
 
@@ -122,7 +142,8 @@ void Pipeline::sobelLoop() {
     }
 }
 
-void Pipeline::detectOcrLoop() {
+// Task Parallelism: Tách Detection và OCR thành 2 threads riêng
+void Pipeline::detectLoop() {
     while (running_.load() || !qSobel_.empty()) {
         FramePacket pkt;
         if (!qSobel_.pop(pkt)) {
@@ -130,25 +151,52 @@ void Pipeline::detectOcrLoop() {
             continue;
         }
 
-        // Dùng frame gốc để detect (hoặc có thể dùng sobel như thêm kênh thông tin)
+        // Chỉ làm detection ở đây
         pkt.plates = detector_.detect(pkt.frame);
 
-        // Lấy vùng biển số đầu tiên để OCR (có thể mở rộng nhiều vùng)
-        if (!pkt.plates.empty()) {
-            const cv::Rect& r = pkt.plates[0];
-            cv::Rect roiRect = r & cv::Rect(0, 0, pkt.frame.cols, pkt.frame.rows);
-            cv::Mat plateRoi = pkt.frame(roiRect).clone();
-            pkt.plateText = ocr_.recognize(plateRoi);
+        // Đẩy vào queue OCR (có thể có nhiều biển số)
+        qDetect_.push(pkt);
+    }
+}
+
+void Pipeline::ocrLoop() {
+    while (running_.load() || !qDetect_.empty()) {
+        FramePacket pkt;
+        if (!qDetect_.pop(pkt)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
         }
 
-        qDetOcr_.push(pkt);
+        // Data Parallelism: Xử lý nhiều ROI song song (nếu có nhiều biển số)
+        if (!pkt.plates.empty()) {
+            std::vector<std::string> ocrResults(pkt.plates.size());
+            
+            // Task Parallelism: Xử lý tất cả ROI song song
+            #pragma omp parallel for
+            for (size_t i = 0; i < pkt.plates.size(); ++i) {
+                const cv::Rect& r = pkt.plates[i];
+                cv::Rect roiRect = r & cv::Rect(0, 0, pkt.frame.cols, pkt.frame.rows);
+                cv::Mat plateRoi = pkt.frame(roiRect).clone();
+                ocrResults[i] = ocr_.recognize(plateRoi);
+            }
+            
+            // Ghép kết quả (lấy biển số đầu tiên có text)
+            for (const auto& text : ocrResults) {
+                if (!text.empty()) {
+                    pkt.plateText = text;
+                    break;
+                }
+            }
+        }
+
+        qRender_.push(pkt);
     }
 }
 
 void Pipeline::renderLoop() {
-    while (running_.load() || !qDetOcr_.empty()) {
+    while (running_.load() || !qRender_.empty()) {
         FramePacket pkt;
-        if (!qDetOcr_.pop(pkt)) {
+        if (!qRender_.pop(pkt)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
         }
@@ -180,10 +228,8 @@ void Pipeline::renderLoop() {
 // ==================== Sobel GPU/CPU ====================
 
 void Pipeline::sobelGPU(const cv::Mat& src, cv::Mat& dst) {
-    // Hàm wrapper nếu sau này muốn gọi trực tiếp trong code khác
-    if (!sobelCuda(src, dst)) {
-        sobelCPU(src, dst);
-    }
+    // Tạm thời fallback về CPU (CUDA cần build riêng)
+    sobelCPU(src, dst);
 }
 
 void Pipeline::sobelCPU(const cv::Mat& src, cv::Mat& dst) {
