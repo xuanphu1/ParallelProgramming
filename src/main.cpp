@@ -8,9 +8,9 @@ int main(int argc, char** argv) {
     }
 
     // Đường dẫn model ONNX (export từ export_torchscript.py)
-    // Lưu ý: lp_detector_ts.onnx & lp_ocr_ts.onnx nằm trong thư mục Main/
-    std::string detectorModel = "Main/lp_detector_ts.onnx";
-    std::string ocrModel      = "Main/lp_ocr_ts.onnx";
+    // Lưu ý: lp_detector_ts.onnx & lp_ocr_ts.onnx nằm trong thư mục models/
+    std::string detectorModel = "models/lp_detector_ts.onnx";
+    std::string ocrModel      = "models/lp_ocr_ts.onnx";
 
     Pipeline pipeline;
     if (!pipeline.initialize(source, detectorModel, ocrModel)) {

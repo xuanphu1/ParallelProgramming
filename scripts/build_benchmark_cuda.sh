@@ -12,7 +12,7 @@ fi
 
 # Compile CUDA file
 echo "Compiling SobelCuda.cu..."
-nvcc -c Main/SobelCuda.cu -o SobelCuda.o -I/usr/local/cuda/include \
+nvcc -c src/SobelCuda.cu -o SobelCuda.o -I/usr/local/cuda/include \
      `pkg-config --cflags opencv4` -arch=sm_50 2>&1
 
 if [ $? -ne 0 ]; then
@@ -23,7 +23,7 @@ fi
 # Compile C++ và link với CUDA
 echo "Compiling và linking benchmark..."
 g++ -std=c++17 -fopenmp -mavx2 -DUSE_CUDA_SOBEL \
-    Main/benchmark_sobel_cuda.cpp Main/SobelSIMD.cpp SobelCuda.o \
+    src/benchmark_sobel_cuda.cpp src/SobelSIMD.cpp SobelCuda.o \
     -o benchmark_sobel_cuda \
     `pkg-config --cflags --libs opencv4` \
     -L/usr/local/cuda/lib64 -lcudart 2>&1
@@ -34,5 +34,5 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "✅ Build thành công: benchmark_sobel_cuda"
-echo "Chạy: ./benchmark_sobel_cuda Main/Bienso.jpg"
+echo "Chạy: ./benchmark_sobel_cuda src/Bienso.jpg"
 

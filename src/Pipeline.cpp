@@ -13,8 +13,16 @@ bool Pipeline::initialize(const std::string& source,
                           const std::string& ocrModelPath) {
     source_ = source;
 
-    // Mở nguồn video/camera
-    if (source == "0" || source.empty()) {
+    // Kiểm tra xem source có phải là file ảnh không
+    bool isImageFile = false;
+    if (source != "0" && !source.empty()) {
+        std::string ext = source.substr(source.find_last_of(".") + 1);
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        isImageFile = (ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "bmp");
+    }
+
+    // Mở nguồn video/camera (bỏ qua nếu là ảnh)
+    if (!isImageFile && (source == "0" || source.empty())) {
         // Thử mở camera với V4L2 backend
         if (!cap_.open(0, cv::CAP_V4L2)) {
             // Fallback: thử mở không chỉ định backend
@@ -31,21 +39,26 @@ bool Pipeline::initialize(const std::string& source,
         cap_.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
         cap_.set(cv::CAP_PROP_FPS, 30);
         std::cout << "[Pipeline] Camera da mo thanh cong (V4L2)." << std::endl;
-    } else {
+    } else if (!isImageFile) {
+        // Mở file video (không phải ảnh)
         if (!cap_.open(source)) {
             std::cerr << "Khong the mo video: " << source << std::endl;
             return false;
         }
+    } else {
+        // Là file ảnh, không cần mở VideoCapture
+        // Sẽ đọc trong captureLoop()
+        std::cout << "[Pipeline] Source la file anh: " << source << std::endl;
     }
 
     // GPU: dùng CUDA Sobel nếu được build với hỗ trợ CUDA (macro USE_CUDA_SOBEL)
-#ifdef USE_CUDA_SOBEL
+    #ifdef USE_CUDA_SOBEL
     useGPU_ = true;
-    std::cout << "[Pipeline] GPU Sobel: ON (CUDA)" << std::endl;
-#else
+    std::cout << "[Pipeline] CUDA support: ENABLED" << std::endl;
+    #else
     useGPU_ = false;
-    std::cout << "[Pipeline] GPU Sobel: OFF (dùng CPU OpenMP)" << std::endl;
-#endif
+    std::cout << "[Pipeline] CUDA support: DISABLED (using SIMD + OpenMP)" << std::endl;
+    #endif
 
     // Khởi tạo models
     if (!detector_.initialize(detectorModelPath)) {
@@ -95,6 +108,37 @@ void Pipeline::stop() {
 // ==================== Các loop ====================
 
 void Pipeline::captureLoop() {
+    // Nếu source là file ảnh (không phải camera/video)
+    if (source_ != "0" && !source_.empty() && !cap_.isOpened()) {
+        // Kiểm tra xem có phải là file ảnh không
+        std::string ext = source_.substr(source_.find_last_of(".") + 1);
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        
+        if (ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "bmp") {
+            // Đọc ảnh tĩnh
+            cv::Mat frame = cv::imread(source_);
+            if (frame.empty()) {
+                std::cerr << "[Capture] Khong the doc anh: " << source_ << std::endl;
+                running_.store(false);
+                return;
+            }
+            
+            std::cout << "[Capture] Doc anh thanh cong: " << source_ 
+                      << " (" << frame.cols << "x" << frame.rows << ")" << std::endl;
+            
+            FramePacket pkt;
+            pkt.frame = frame;
+            pkt.frameId = frameCounter_++;
+            qCapture_.push(pkt);
+            
+            // Đối với ảnh tĩnh, chỉ xử lý 1 lần rồi dừng
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            running_.store(false);
+            return;
+        }
+    }
+    
+    // Xử lý video/camera stream
     int consecutiveFailures = 0;
     const int maxFailures = 10;
     
@@ -133,8 +177,16 @@ void Pipeline::sobelLoop() {
             gray = pkt.frame;
         }
 
-        // Data Parallelism: Thử SIMD trước, fallback về CPU OpenMP
-        if (!sobelSIMD(gray, pkt.sobel)) {
+        // Data Parallelism: Thử CUDA -> SIMD -> CPU OpenMP
+        bool processed = false;
+        
+        #ifdef USE_CUDA_SOBEL
+        if (useGPU_ && sobelCuda(gray, pkt.sobel)) {
+            processed = true;
+        }
+        #endif
+        
+        if (!processed && !sobelSIMD(gray, pkt.sobel)) {
             sobelCPU(gray, pkt.sobel);
         }
 

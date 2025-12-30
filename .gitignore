@@ -1,0 +1,47 @@
+# Build artifacts
+build/
+*.o
+*.so
+*.a
+lp_main
+benchmark_sobel*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Models (nếu không muốn commit)
+# models/*.onnx
+# models/*.pt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.pdf
+docs/Report/build/
+
+# Data
+data/*.jpg
+data/*.png
+data/*.mp4
+
+# Temporary
+*.tmp
+*.bak
+
