@@ -1,55 +1,70 @@
-# Báo Cáo LaTeX - Dự Án Nhận Diện Biển Số
+# Hướng Dẫn Biên Dịch Báo Cáo LaTeX
 
-## Cấu trúc
+## Yêu Cầu
+
+Để biên dịch báo cáo LaTeX, bạn cần cài đặt:
+
+1. **TeX Distribution:**
+   - Windows: MiKTeX hoặc TeX Live
+   - Linux: `sudo apt-get install texlive-full` hoặc `texlive-latex-extra texlive-lang-vietnamese`
+   - macOS: MacTeX
+
+2. **Các package cần thiết:**
+   - `babel` với option `vietnamese`
+   - `amsmath`
+   - `graphicx`
+   - `float`
+   - `listings`
+   - `xcolor`
+   - `hyperref`
+   - `geometry`
+
+## Cách Biên Dịch
+
+### Windows (MiKTeX/TeX Live)
+
+```bash
+pdflatex main.tex
+pdflatex main.tex  # Chạy lại lần 2 để cập nhật references
+```
+
+### Linux
+
+```bash
+pdflatex main.tex
+pdflatex main.tex  # Chạy lại lần 2
+```
+
+### macOS
+
+```bash
+pdflatex main.tex
+pdflatex main.tex
+```
+
+## Cấu Trúc File
 
 - `main.tex`: File LaTeX chính chứa toàn bộ nội dung báo cáo
-- `Makefile`: Script để build PDF
-- `README.md`: Hướng dẫn này
 
-## Cách Build PDF
+## Lưu Ý
 
-### Yêu cầu:
-- `pdflatex` (thường có trong gói `texlive-latex-base`)
-- `texlive-lang-vietnamese` (cho tiếng Việt)
+- Nếu thiếu package, hệ thống sẽ tự động cài đặt (với MiKTeX) hoặc bạn cần cài thủ công
+- Chạy `pdflatex` 2 lần để đảm bảo tất cả cross-references và table of contents được cập nhật đúng
+- File PDF output sẽ là `main.pdf`
 
-### Cài đặt (Ubuntu/Debian):
+## Troubleshooting
+
+### Lỗi: Package không tìm thấy
+
+**Linux:**
 ```bash
-sudo apt-get install texlive-latex-base texlive-lang-vietnamese texlive-latex-extra
+sudo apt-get install texlive-lang-vietnamese
 ```
 
-### Build:
-```bash
-cd Report
-make
-```
+**Windows (MiKTeX):**
+- Mở MiKTeX Console và cài package thiếu
 
-File PDF sẽ được tạo: `main.pdf`
+### Lỗi: Font không hỗ trợ tiếng Việt
 
-### Xem PDF:
-```bash
-make view
-```
-
-### Xóa file build:
-```bash
-make clean
-```
-
-## Nội dung báo cáo
-
-Báo cáo bao gồm:
-1. Giới thiệu dự án
-2. Kiến trúc hệ thống
-3. Các kỹ thuật song song hóa (Data + Task Parallelism)
-4. Chi tiết triển khai
-5. Kết quả và đánh giá
-6. Kết luận
-
-## Tùy chỉnh
-
-Bạn có thể chỉnh sửa `main.tex` để:
-- Thêm tên của bạn vào phần author
-- Thêm các hình ảnh/sơ đồ
-- Thêm kết quả đo lường cụ thể
-- Thêm các phần khác theo yêu cầu
+Đảm bảo đã cài `texlive-lang-vietnamese` (Linux) hoặc package `vietnam` (MiKTeX).
 

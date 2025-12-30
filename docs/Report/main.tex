@@ -1,195 +1,36 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[12pt,a4paper]{report}
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}  % Hỗ trợ encoding tốt hơn cho tiếng Việt
-% File này chứa các khai báo Unicode cho tiếng Việt
-% Thêm vào đầu file main.tex sau \usepackage[utf8]{inputenc}
-
-% Các ký tự tiếng Việt thường dùng
-\DeclareUnicodeCharacter{00C0}{\`A}
-\DeclareUnicodeCharacter{00C1}{\'A}
-\DeclareUnicodeCharacter{00C2}{\^A}
-\DeclareUnicodeCharacter{00C3}{\~A}
-\DeclareUnicodeCharacter{00C8}{\`E}
-\DeclareUnicodeCharacter{00C9}{\'E}
-\DeclareUnicodeCharacter{00CA}{\^E}
-\DeclareUnicodeCharacter{00CC}{\`I}
-\DeclareUnicodeCharacter{00CD}{\'I}
-\DeclareUnicodeCharacter{00D2}{\`O}
-\DeclareUnicodeCharacter{00D3}{\'O}
-\DeclareUnicodeCharacter{00D4}{\^O}
-\DeclareUnicodeCharacter{00D5}{\~O}
-\DeclareUnicodeCharacter{00D9}{\`U}
-\DeclareUnicodeCharacter{00DA}{\'U}
-\DeclareUnicodeCharacter{00DD}{\'Y}
-\DeclareUnicodeCharacter{00E0}{\`a}
-\DeclareUnicodeCharacter{00E1}{\'a}
-\DeclareUnicodeCharacter{00E2}{\^a}
-\DeclareUnicodeCharacter{00E3}{\~a}
-\DeclareUnicodeCharacter{00E8}{\`e}
-\DeclareUnicodeCharacter{00E9}{\'e}
-\DeclareUnicodeCharacter{00EA}{\^e}
-\DeclareUnicodeCharacter{00EC}{\`i}
-\DeclareUnicodeCharacter{00ED}{\'i}
-\DeclareUnicodeCharacter{00F2}{\`o}
-\DeclareUnicodeCharacter{00F3}{\'o}
-\DeclareUnicodeCharacter{00F4}{\^o}
-\DeclareUnicodeCharacter{00F5}{\~o}
-\DeclareUnicodeCharacter{00F9}{\`u}
-\DeclareUnicodeCharacter{00FA}{\'u}
-\DeclareUnicodeCharacter{00FD}{\'y}
-\DeclareUnicodeCharacter{0102}{\u{A}}
-\DeclareUnicodeCharacter{0103}{\u{a}}
-\DeclareUnicodeCharacter{0110}{\d{D}}
-\DeclareUnicodeCharacter{0111}{\d{d}}
-\DeclareUnicodeCharacter{0128}{\~I}
-\DeclareUnicodeCharacter{0129}{\~i}
-\DeclareUnicodeCharacter{0168}{\~U}
-\DeclareUnicodeCharacter{0169}{\~u}
-\DeclareUnicodeCharacter{01A0}{\d{O}}
-\DeclareUnicodeCharacter{01A1}{\d{o}}
-\DeclareUnicodeCharacter{01AF}{\d{U}}
-\DeclareUnicodeCharacter{01B0}{\d{u}}
-% Các ký tự có dấu nặng
-\DeclareUnicodeCharacter{1EA0}{A\d{a}}
-\DeclareUnicodeCharacter{1EA1}{a\d{a}}
-\DeclareUnicodeCharacter{1EA2}{A\d{a}}
-\DeclareUnicodeCharacter{1EA3}{a\d{a}}
-\DeclareUnicodeCharacter{1EA4}{A\d{a}}
-\DeclareUnicodeCharacter{1EA5}{a\d{a}}
-\DeclareUnicodeCharacter{1EA6}{A\d{a}}
-\DeclareUnicodeCharacter{1EA7}{a\d{a}}
-\DeclareUnicodeCharacter{1EA8}{A\d{a}}
-\DeclareUnicodeCharacter{1EA9}{a\d{a}}
-\DeclareUnicodeCharacter{1EAA}{A\d{a}}
-\DeclareUnicodeCharacter{1EAB}{a\d{a}}
-\DeclareUnicodeCharacter{1EAC}{A\d{a}}
-\DeclareUnicodeCharacter{1EAD}{a\d{a}}
-\DeclareUnicodeCharacter{1EAE}{A\d{a}}
-\DeclareUnicodeCharacter{1EAF}{a\d{a}}
-\DeclareUnicodeCharacter{1EB0}{A\d{a}}
-\DeclareUnicodeCharacter{1EB1}{a\d{a}}
-\DeclareUnicodeCharacter{1EB2}{A\d{a}}
-\DeclareUnicodeCharacter{1EB3}{a\d{a}}
-\DeclareUnicodeCharacter{1EB4}{A\d{a}}
-\DeclareUnicodeCharacter{1EB5}{a\d{a}}
-\DeclareUnicodeCharacter{1EB6}{A\d{a}}
-\DeclareUnicodeCharacter{1EB7}{a\d{a}}
-\DeclareUnicodeCharacter{1EB8}{E\d{e}}
-\DeclareUnicodeCharacter{1EB9}{e\d{e}}
-\DeclareUnicodeCharacter{1EBA}{E\d{e}}
-\DeclareUnicodeCharacter{1EBB}{e\d{e}}
-\DeclareUnicodeCharacter{1EBC}{E\d{e}}
-\DeclareUnicodeCharacter{1EBD}{e\d{e}}
-\DeclareUnicodeCharacter{1EBE}{E\d{e}}
-\DeclareUnicodeCharacter{1EBF}{e\d{e}}
-\DeclareUnicodeCharacter{1EC0}{E\d{e}}
-\DeclareUnicodeCharacter{1EC1}{e\d{e}}
-\DeclareUnicodeCharacter{1EC2}{E\d{e}}
-\DeclareUnicodeCharacter{1EC3}{e\d{e}}
-\DeclareUnicodeCharacter{1EC4}{E\d{e}}
-\DeclareUnicodeCharacter{1EC5}{e\d{e}}
-\DeclareUnicodeCharacter{1EC6}{E\d{e}}
-\DeclareUnicodeCharacter{1EC7}{e\d{e}}
-\DeclareUnicodeCharacter{1EC8}{I\d{i}}
-\DeclareUnicodeCharacter{1EC9}{I\d{i}}
-\DeclareUnicodeCharacter{1ECA}{I\d{i}}
-\DeclareUnicodeCharacter{1ECB}{i\d{i}}
-\DeclareUnicodeCharacter{1ECC}{O\d{o}}
-\DeclareUnicodeCharacter{1ECD}{O\d{o}}
-\DeclareUnicodeCharacter{1ECE}{O\d{o}}
-\DeclareUnicodeCharacter{1ECF}{o\d{o}}
-\DeclareUnicodeCharacter{1ED0}{O\d{o}}
-\DeclareUnicodeCharacter{1ED1}{o\d{o}}
-\DeclareUnicodeCharacter{1ED2}{O\d{o}}
-\DeclareUnicodeCharacter{1ED3}{o\d{o}}
-\DeclareUnicodeCharacter{1ED4}{O\d{o}}
-\DeclareUnicodeCharacter{1ED5}{o\d{o}}
-\DeclareUnicodeCharacter{1ED6}{O\d{o}}
-\DeclareUnicodeCharacter{1ED7}{o\d{o}}
-\DeclareUnicodeCharacter{1ED8}{O\d{o}}
-\DeclareUnicodeCharacter{1ED9}{o\d{o}}
-\DeclareUnicodeCharacter{1EDA}{O\d{o}}
-\DeclareUnicodeCharacter{1EDB}{o\d{o}}
-\DeclareUnicodeCharacter{1EDC}{O\d{o}}
-\DeclareUnicodeCharacter{1EDD}{o\d{o}}
-\DeclareUnicodeCharacter{1EDE}{O\d{o}}
-\DeclareUnicodeCharacter{1EDF}{o\d{o}}
-\DeclareUnicodeCharacter{1EE0}{O\d{o}}
-\DeclareUnicodeCharacter{1EE1}{o\d{o}}
-\DeclareUnicodeCharacter{1EE2}{O\d{o}}
-\DeclareUnicodeCharacter{1EE3}{o\d{o}}
-\DeclareUnicodeCharacter{1EE4}{U\d{u}}
-\DeclareUnicodeCharacter{1EE5}{U\d{u}}
-\DeclareUnicodeCharacter{1EE6}{U\d{u}}
-\DeclareUnicodeCharacter{1EE7}{u\d{u}}
-\DeclareUnicodeCharacter{1EE8}{U\d{u}}
-\DeclareUnicodeCharacter{1EE9}{u\d{u}}
-\DeclareUnicodeCharacter{1EEA}{U\d{u}}
-\DeclareUnicodeCharacter{1EEB}{u\d{u}}
-\DeclareUnicodeCharacter{1EEC}{U\d{u}}
-\DeclareUnicodeCharacter{1EED}{u\d{u}}
-\DeclareUnicodeCharacter{1EEE}{U\d{u}}
-\DeclareUnicodeCharacter{1EEF}{u\d{u}}
-\DeclareUnicodeCharacter{1EF0}{U\d{u}}
-\DeclareUnicodeCharacter{1EF1}{u\d{u}}
-\DeclareUnicodeCharacter{1EF2}{Y\d{y}}
-\DeclareUnicodeCharacter{1EF3}{Y\d{y}}
-\DeclareUnicodeCharacter{1EF4}{Y\d{y}}
-\DeclareUnicodeCharacter{1EF5}{y\d{y}}
-\DeclareUnicodeCharacter{1EF6}{Y\d{y}}
-\DeclareUnicodeCharacter{1EF7}{y\d{y}}
-\DeclareUnicodeCharacter{1EF8}{Y\d{y}}
-\DeclareUnicodeCharacter{1EF9}{y\d{y}}
-
+\usepackage[vietnamese]{babel}
 \usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{geometry}
-\usepackage{float}
-\usepackage{subfigure}
-% \usepackage{algorithm}      % Comment nếu không có package
-% \usepackage{algorithmic}    % Comment nếu không có package
-% Sử dụng môi trường verbatim thay thế cho algorithm
-\usepackage{titlesec}
-
 \geometry{margin=2.5cm}
 
 % Cấu hình cho code listings
 \lstset{
     language=C++,
     basicstyle=\ttfamily\small,
-    keywordstyle=\color{blue}\bfseries,
+    keywordstyle=\color{blue},
     commentstyle=\color{green!60!black},
     stringstyle=\color{red},
     numbers=left,
     numberstyle=\tiny\color{gray},
     stepnumber=1,
     numbersep=5pt,
-    backgroundcolor=\color{gray!10},
     frame=single,
     breaklines=true,
-    breakatwhitespace=true,
-    tabsize=4,
-    showspaces=false,
     showstringspaces=false
 }
 
-% Format chương
-\titleformat{\section}
-{\Large\bfseries}
-{CHƯƠNG \thesection. }
-{0em}
-{}
-
-\title{\textbf{BÁO CÁO ĐỒ ÁN}\\
-Nhận Diện Biển Số Xe với Sobel Filter\\
-và Các Kỹ Thuật Song Song Hóa}
-\author{Sinh viên: [Tên của bạn]\\
-Môn học: Lập trình Song song}
+\title{BÁO CÁO ĐỒ ÁN\\
+Tối Ưu Hóa Song Song Bộ Lọc Sobel\\
+Trong Hệ Thống Nhận Dạng Biển Số Xe\\
+Sử Dụng Mô Hình Học Sâu}
+\author{Sinh viên thực hiện}
 \date{\today}
 
 \begin{document}
@@ -197,832 +38,839 @@ Môn học: Lập trình Song song}
 \maketitle
 
 \tableofcontents
+\listoffigures
+\listoftables
+
 \newpage
 
-\section{GIỚI THIỆU}
+\chapter{GIỚI THIỆU}
 
-\subsection{Đặt vấn đề}
+\section{Đặt vấn đề}
 
-\subsubsection{Bài toán}
+\subsection{Bài toán}
 
-Trong bối cảnh phát triển của công nghệ thông minh, việc nhận diện biển số xe tự động đóng vai trò quan trọng trong nhiều ứng dụng thực tế:
+Trong thời đại công nghệ hiện đại, việc nhận dạng biển số xe tự động đóng vai trò quan trọng trong nhiều ứng dụng thực tế:
 
-\begin{itemize}
-    \item \textbf{Giám sát giao thông}: Tự động phát hiện và theo dõi phương tiện, quản lý lưu lượng giao thông
-    \item \textbf{Bãi giữ xe thông minh}: Tự động nhận diện biển số để tính phí, quản lý ra vào
-    \item \textbf{Nhận dạng phương tiện tự động}: Hỗ trợ hệ thống an ninh, tìm kiếm phương tiện
-\end{itemize}
+\textbf{Giám sát giao thông:} Hệ thống nhận dạng biển số giúp tự động hóa việc giám sát và quản lý phương tiện giao thông, phát hiện vi phạm, kiểm soát tốc độ và quản lý lưu lượng giao thông.
 
-\subsubsection{Khó khăn}
+\textbf{Bãi giữ xe thông minh:} Tự động hóa quá trình vào/ra của xe, tính phí, quản lý chỗ đỗ xe mà không cần nhân viên canh gác.
 
-Tuy nhiên, bài toán nhận diện biển số xe gặp nhiều thách thức:
+\textbf{Nhận dạng phương tiện tự động:} Ứng dụng trong hệ thống thu phí điện tử, kiểm soát an ninh, và quản lý đội xe.
 
-\begin{itemize}
-    \item \textbf{Nhiễu ảnh}: Ảnh có thể bị nhiễu do điều kiện chụp, chất lượng camera
-    \item \textbf{Ánh sáng thay đổi}: Điều kiện ánh sáng khác nhau (ngày/đêm, nắng/bóng râm) ảnh hưởng đến chất lượng ảnh
-    \item \textbf{Ảnh độ phân giải thấp}: Camera đặt xa hoặc chất lượng thấp làm giảm độ rõ nét
-    \item \textbf{Tốc độ xử lý real-time}: Yêu cầu xử lý nhanh để đáp ứng ứng dụng thời gian thực
-\end{itemize}
+\subsection{Khó khăn}
 
-\subsection{Mục tiêu đề tài}
+Tuy nhiên, việc nhận dạng biển số xe trong môi trường thực tế gặp nhiều thách thức:
 
-\subsubsection{Áp dụng bộ lọc Sobel}
+\textbf{Nhiễu ảnh:} Ảnh có thể bị nhiễu do điều kiện thời tiết, chất lượng camera, hoặc khoảng cách chụp.
 
-\begin{itemize}
-    \item \textbf{Làm nổi biên}: Phát hiện và tăng cường các cạnh của biển số, giúp model dễ dàng nhận diện hơn
-    \item \textbf{Giảm nhiễu không cần thiết}: Lọc bỏ các chi tiết không quan trọng, tập trung vào thông tin biên
-\end{itemize}
+\textbf{Ánh sáng thay đổi:} Điều kiện ánh sáng thay đổi liên tục (ban ngày, ban đêm, bóng râm) ảnh hưởng đến chất lượng nhận dạng.
 
-\subsubsection{Song song hóa Sobel}
+\textbf{Ảnh độ phân giải thấp:} Camera đặt xa hoặc chất lượng thấp dẫn đến ảnh mờ, khó nhận dạng.
 
-Để đạt hiệu năng cao, đề tài tập trung vào song song hóa bộ lọc Sobel:
+\textbf{Tốc độ xử lý real-time:} Yêu cầu xử lý nhanh để đáp ứng ứng dụng thời gian thực, đặc biệt trong video streaming.
 
-\begin{itemize}
-    \item \textbf{CPU đa luồng}: Sử dụng OpenMP để chia nhỏ công việc cho nhiều cores
-    \item \textbf{GPU}: Tận dụng CUDA để xử lý song song hàng nghìn pixels cùng lúc
-    \item \textbf{Vector hóa}: Sử dụng SIMD (AVX-256) để xử lý nhiều pixels trong một instruction
-\end{itemize}
+\section{Mục tiêu đề tài}
 
-\subsubsection{Kết hợp model học sâu}
+Đề tài tập trung vào việc tối ưu hóa pipeline nhận dạng biển số xe thông qua các mục tiêu cụ thể:
 
-\begin{itemize}
-    \item \textbf{Phát hiện biển số chính xác hơn}: Sử dụng YOLOv5 để phát hiện vùng biển số
-    \item \textbf{Giảm thời gian suy luận}: Tối ưu pipeline để đạt throughput cao
-\end{itemize}
+\subsection{Áp dụng bộ lọc Sobel}
 
-\subsection{Phạm vi nghiên cứu}
+\textbf{Làm nổi biên:} Sử dụng bộ lọc Sobel để phát hiện và làm nổi bật các cạnh trong ảnh, giúp tăng cường thông tin biên của biển số xe.
 
-\begin{itemize}
-    \item \textbf{Ảnh tĩnh / video}: Hệ thống hỗ trợ xử lý cả ảnh đơn lẻ và video stream
-    \item \textbf{OCR biển số}: Tích hợp mô hình OCR để nhận diện ký tự trên biển số
-    \item \textbf{So sánh có Sobel vs không Sobel}: Đánh giá ảnh hưởng của tiền xử lý Sobel đến độ chính xác
-\end{itemize}
+\textbf{Giảm nhiễu không cần thiết:} Bộ lọc Sobel giúp loại bỏ các chi tiết không liên quan, tập trung vào các đặc trưng quan trọng của biển số.
 
-\subsection{Đóng góp của đề tài}
+\subsection{Song song hóa Sobel}
 
-\begin{itemize}
-    \item \textbf{Đề xuất pipeline tiền xử lý song song}: Kết hợp Sobel filter với các kỹ thuật song song hóa
-    \item \textbf{Đánh giá ảnh hưởng Sobel tới model}: Phân tích tác động của tiền xử lý đến hiệu quả detection
-    \item \textbf{So sánh hiệu năng}: Benchmark chi tiết giữa các phương pháp (CPU scalar, SIMD, CUDA)
-\end{itemize}
+Để đạt được tốc độ xử lý cao, đề tài triển khai song song hóa bộ lọc Sobel theo nhiều phương pháp:
 
-\section{CƠ SỞ LÝ THUYẾT}
+\textbf{CPU đa luồng:} Sử dụng OpenMP để chia nhỏ ảnh và xử lý song song trên nhiều lõi CPU.
 
-\subsection{Tổng quan xử lý ảnh số}
+\textbf{GPU:} Triển khai kernel CUDA để tận dụng sức mạnh tính toán song song của GPU.
 
-\subsubsection{Khái niệm cơ bản}
+\textbf{Vector hóa:} Sử dụng SIMD (AVX-256) để xử lý nhiều pixel cùng lúc trong một lệnh CPU.
 
-\begin{itemize}
-    \item \textbf{Pixel}: Đơn vị nhỏ nhất của ảnh số, mỗi pixel có giá trị màu (grayscale hoặc RGB)
-    \item \textbf{Kernel}: Ma trận nhỏ dùng để áp dụng các phép toán lên ảnh
-    \item \textbf{Convolution}: Phép toán nhân kernel với từng vùng ảnh để tạo ảnh mới
-\end{itemize}
+\subsection{Kết hợp model học sâu}
 
-\subsubsection{Lọc không gian (Spatial Filtering)}
+\textbf{Phát hiện biển số chính xác hơn:} Sử dụng mô hình YOLOv5 để phát hiện vùng biển số với độ chính xác cao.
 
-Lọc không gian là kỹ thuật xử lý ảnh bằng cách áp dụng một kernel lên từng pixel và các pixel lân cận:
+\textbf{Giảm thời gian suy luận:} Tối ưu pipeline để giảm latency và tăng throughput, đáp ứng yêu cầu real-time.
+
+\section{Phạm vi nghiên cứu}
+
+Đề tài tập trung vào các phạm vi sau:
+
+\textbf{Ảnh tĩnh và video:} Hệ thống có thể xử lý cả ảnh đơn lẻ và luồng video từ camera.
+
+\textbf{Tiền xử lý với Sobel:} Nghiên cứu ảnh hưởng của bộ lọc Sobel đến hiệu suất nhận dạng, không đi sâu vào phần OCR (chỉ sử dụng model OCR có sẵn).
+
+\textbf{So sánh hiệu năng:} So sánh hiệu suất giữa pipeline có và không có bộ lọc Sobel, cũng như so sánh các phương pháp song song hóa khác nhau.
+
+\section{Đóng góp của đề tài}
+
+Đề tài đóng góp các điểm sau:
+
+\textbf{Đề xuất pipeline tiền xử lý song song:} Thiết kế và triển khai pipeline xử lý ảnh song song với nhiều tầng tối ưu (SIMD, OpenMP, CUDA).
+
+\textbf{Đánh giá ảnh hưởng Sobel tới model:} Phân tích và đánh giá tác động của bộ lọc Sobel đến độ chính xác và tốc độ của mô hình học sâu.
+
+\textbf{So sánh hiệu năng:} Cung cấp benchmark chi tiết so sánh các phương pháp song song hóa (CPU scalar, SIMD, CUDA) về FPS và latency.
+
+\chapter{CƠ SỞ LÝ THUYẾT}
+
+\section{Tổng quan xử lý ảnh số}
+
+\subsection{Khái niệm cơ bản}
+
+\textbf{Pixel:} Pixel (picture element) là đơn vị nhỏ nhất của ảnh số, mỗi pixel chứa thông tin về màu sắc và độ sáng tại một vị trí cụ thể.
+
+\textbf{Kernel:} Kernel (hay filter) là một ma trận nhỏ được sử dụng để thực hiện các phép toán convolution trên ảnh, thường có kích thước 3x3, 5x5, hoặc lớn hơn.
+
+\textbf{Convolution:} Convolution là phép toán cơ bản trong xử lý ảnh, trong đó kernel được "trượt" qua ảnh để tính giá trị mới cho mỗi pixel dựa trên các pixel xung quanh.
+
+\subsection{Lọc không gian (Spatial Filtering)}
+
+Lọc không gian là kỹ thuật xử lý ảnh trực tiếp trên miền không gian (spatial domain), thay vì chuyển sang miền tần số. Có hai loại chính:
+
+\textbf{Lọc tuyến tính:} Sử dụng convolution với kernel tuyến tính, ví dụ: Gaussian blur, Sobel, Laplacian.
+
+\textbf{Lọc phi tuyến:} Sử dụng các phép toán phi tuyến, ví dụ: median filter, morphological operations.
+
+\section{Bộ lọc Sobel}
+
+\subsection{Nguyên lý phát hiện biên}
+
+Bộ lọc Sobel là một toán tử gradient được sử dụng để phát hiện biên trong ảnh. Nguyên lý hoạt động dựa trên việc tính gradient (độ dốc) của cường độ pixel:
 
 \begin{equation}
-I'(x,y) = \sum_{i=-k}^{k} \sum_{j=-k}^{k} K(i,j) \cdot I(x+i, y+j)
+G = \sqrt{G_x^2 + G_y^2}
+\end{equation}
+
+Trong đó $G_x$ và $G_y$ là gradient theo hướng ngang và dọc.
+
+\subsection{Kernel Sobel}
+
+Bộ lọc Sobel sử dụng hai kernel riêng biệt để tính gradient theo hai hướng:
+
+\textbf{Kernel Gx (gradient ngang):}
+\begin{equation}
+G_x = \begin{bmatrix}
+-1 & 0 & 1 \\
+-2 & 0 & 2 \\
+-1 & 0 & 1
+\end{bmatrix}
+\end{equation}
+
+\textbf{Kernel Gy (gradient dọc):}
+\begin{equation}
+G_y = \begin{bmatrix}
+-1 & -2 & -1 \\
+0 & 0 & 0 \\
+1 & 2 & 1
+\end{bmatrix}
+\end{equation}
+
+\subsection{Đặc điểm}
+
+\textbf{Nhấn mạnh biên:} Sobel làm nổi bật các vùng có sự thay đổi đột ngột về cường độ, đặc biệt hiệu quả với biên dọc và ngang.
+
+\textbf{Nhạy với nhiễu:} Do tính chất gradient, Sobel có thể nhạy cảm với nhiễu trong ảnh. Có thể kết hợp với Gaussian blur để giảm nhiễu trước khi áp dụng Sobel.
+
+\section{Song song trong xử lý ảnh}
+
+\subsection{Tính chất}
+
+Xử lý ảnh có tính chất song song tự nhiên:
+
+\textbf{Mỗi pixel xử lý độc lập:} Trong nhiều phép toán xử lý ảnh (như Sobel), việc tính toán giá trị pixel mới chỉ phụ thuộc vào các pixel lân cận, không phụ thuộc vào kết quả của các pixel khác. Điều này cho phép xử lý song song hiệu quả.
+
+\subsection{Các mô hình song song}
+
+\textbf{CPU đa luồng (OpenMP, Threading):} Chia ảnh thành các vùng và gán mỗi vùng cho một thread xử lý. OpenMP cung cấp các directive đơn giản để song song hóa vòng lặp.
+
+\textbf{GPU (CUDA / OpenCL):} Tận dụng hàng nghìn lõi tính toán của GPU để xử lý song song ở mức độ hạt mịn (fine-grained parallelism). Mỗi thread GPU có thể xử lý một hoặc một nhóm pixel nhỏ.
+
+\textbf{SIMD / Vectorization:} Sử dụng các lệnh vector của CPU (AVX, SSE) để xử lý nhiều pixel cùng lúc trong một lệnh. Ví dụ: AVX-256 có thể xử lý 8 giá trị float (32-bit) cùng lúc.
+
+\section{Bài toán phát hiện biển số xe}
+
+\subsection{Object Detection}
+
+Phát hiện biển số xe là một bài toán object detection, yêu cầu:
+\begin{itemize}
+    \item Xác định vị trí biển số trong ảnh (bounding box)
+    \item Phân loại đối tượng (có phải biển số hay không)
+    \item Xử lý trường hợp có nhiều biển số trong một ảnh
+\end{itemize}
+
+\subsection{Các hướng tiếp cận}
+
+\textbf{Truyền thống:} 
+\begin{itemize}
+    \item Haar Cascade: Sử dụng đặc trưng Haar và AdaBoost
+    \item Edge-based: Dựa trên phát hiện biên và hình dạng hình học
+    \item Template matching: So khớp với mẫu biển số
+\end{itemize}
+
+\textbf{Học sâu:}
+\begin{itemize}
+    \item YOLO (You Only Look Once): Phát hiện đối tượng trong một lần duyệt qua mạng, nhanh và hiệu quả
+    \item SSD (Single Shot Detector): Tương tự YOLO, sử dụng nhiều scale
+    \item Faster R-CNN: Chính xác hơn nhưng chậm hơn, sử dụng region proposal
+\end{itemize}
+
+\section{Mô hình học sâu sử dụng}
+
+\subsection{Kiến trúc tổng quan}
+
+Đề tài sử dụng YOLOv5 (nano variant) cho cả detection và OCR:
+
+\textbf{YOLOv5 Architecture:}
+\begin{itemize}
+    \item Backbone: CSPDarknet53 (Cross Stage Partial Network)
+    \item Neck: PANet (Path Aggregation Network)
+    \item Head: Detection head với anchor-based detection
+\end{itemize}
+
+\subsection{Đầu vào / Đầu ra}
+
+\textbf{Detection Model:}
+\begin{itemize}
+    \item Input: Ảnh RGB kích thước 640x640 pixels
+    \item Output: Bounding boxes với confidence scores và class IDs
+    \item Format: ONNX (Open Neural Network Exchange)
+\end{itemize}
+
+\textbf{OCR Model:}
+\begin{itemize}
+    \item Input: Ảnh ROI biển số đã cắt, kích thước 320x320 pixels
+    \item Output: Các ký tự được nhận dạng với confidence scores
+\end{itemize}
+
+\subsection{Loss function}
+
+YOLOv5 sử dụng loss function kết hợp:
+\begin{equation}
+L_{total} = L_{box} + L_{obj} + L_{cls}
 \end{equation}
 
 Trong đó:
 \begin{itemize}
-    \item $I(x,y)$: Giá trị pixel tại vị trí $(x,y)$ của ảnh gốc
-    \item $I'(x,y)$: Giá trị pixel sau khi lọc
-    \item $K(i,j)$: Giá trị kernel tại vị trí $(i,j)$
-    \item $k$: Kích thước kernel (thường là 1 cho kernel 3x3)
+    \item $L_{box}$: Loss cho bounding box regression (IoU loss)
+    \item $L_{obj}$: Loss cho objectness (có đối tượng hay không)
+    \item $L_{cls}$: Loss cho classification
 \end{itemize}
 
-\subsection{Bộ lọc Sobel}
+\subsection{Ưu điểm và hạn chế}
 
-\subsubsection{Nguyên lý phát hiện biên}
-
-Bộ lọc Sobel là một toán tử gradient dùng để phát hiện biên cạnh trong ảnh. Sobel tính gradient theo hai hướng:
-
+\textbf{Ưu điểm:}
 \begin{itemize}
-    \item \textbf{Gradient theo X (Gx)}: Phát hiện biên dọc
-    \item \textbf{Gradient theo Y (Gy)}: Phát hiện biên ngang
+    \item Tốc độ suy luận nhanh, phù hợp real-time
+    \item Độ chính xác cao với model đã được huấn luyện tốt
+    \item Hỗ trợ ONNX Runtime, dễ tích hợp vào C++
 \end{itemize}
 
-\subsubsection{Kernel Sobel}
-
-Kernel Sobel 3x3 được định nghĩa như sau:
-
-\textbf{Kernel Gx (phát hiện biên dọc)}:
-\begin{equation}
-G_x = \begin{bmatrix}
--1 & 0 & +1 \\
--2 & 0 & +2 \\
--1 & 0 & +1
-\end{bmatrix}
-\end{equation}
-
-\textbf{Kernel Gy (phát hiện biên ngang)}:
-\begin{equation}
-G_y = \begin{bmatrix}
--1 & -2 & -1 \\
- 0 &  0 &  0 \\
-+1 & +2 & +1
-\end{bmatrix}
-\end{equation}
-
-\subsubsection{Tinh độ lớn gradient}
-
-Độ lớn gradient được tính bằng:
-
-\begin{equation}
-|G| = \sqrt{G_x^2 + G_y^2}
-\end{equation}
-
-Hoặc xấp xỉ:
-
-\begin{equation}
-|G| \approx |G_x| + |G_y|
-\end{equation}
-
-\subsubsection{Đặc điểm}
-
+\textbf{Hạn chế:}
 \begin{itemize}
-    \item \textbf{Nhấn mạnh biên}: Làm nổi bật các cạnh và đường viền trong ảnh
-    \item \textbf{Nhạy với nhiễu}: Có thể tăng cường nhiễu nếu ảnh gốc có nhiều nhiễu
-    \item \textbf{Hướng biên}: Có thể xác định hướng của biên thông qua $\arctan(G_y/G_x)$
+    \item Yêu cầu tài nguyên tính toán (GPU khuyến nghị)
+    \item Cần dataset lớn và đa dạng để huấn luyện
+    \item Nhạy cảm với điều kiện ánh sáng và góc chụp
 \end{itemize}
 
-\subsection{Song song trong xử lý ảnh}
+\chapter{PHƯƠNG PHÁP ĐỀ XUẤT}
 
-\subsubsection{Tinh chất}
+\section{Tổng quan hệ thống}
 
-Xử lý ảnh có tính chất song song tự nhiên:
+\subsection{Pipeline xử lý}
 
-\begin{itemize}
-    \item \textbf{Mỗi pixel xử lý độc lập}: Các pixel có thể được xử lý song song mà không phụ thuộc nhau (trừ border pixels)
-    \item \textbf{Dữ liệu cục bộ}: Mỗi pixel chỉ cần dữ liệu từ các pixel lân cận
-    \item \textbf{Tinh toán đồng nhất}: Cùng một phép toán áp dụng cho tất cả pixels
-\end{itemize}
-
-\subsubsection{Các mô hình song song}
-
-\paragraph{CPU đa luồng (OpenMP, Threading)}
-\begin{itemize}
-    \item Chia ảnh thành các vùng (theo dòng hoặc block)
-    \item Mỗi thread xử lý một vùng độc lập
-    \item Sử dụng \texttt{\#pragma omp parallel for} để tự động phân chia
-\end{itemize}
-
-\paragraph{GPU (CUDA / OpenCL)}
-\begin{itemize}
-    \item Mỗi thread GPU xử lý một hoặc một nhóm pixels
-    \item Hàng nghìn threads chạy song song
-    \item Tận dụng bộ nhớ shared và texture memory
-\end{itemize}
-
-\paragraph{SIMD / Vectorization}
-\begin{itemize}
-    \item Xử lý nhiều pixels cùng lúc trong một instruction
-    \item AVX-256: Xử lý 8 giá trị float (32-bit) hoặc 32 giá trị int (8-bit) cùng lúc
-    \item Giảm số lượng instructions và tăng throughput
-\end{itemize}
-
-\subsection{Bài toán phát hiện biển số xe}
-
-\subsubsection{Object Detection}
-
-Phát hiện biển số xe là bài toán Object Detection, cần:
-\begin{itemize}
-    \item Xác định vị trí biển số trong ảnh (bounding box)
-    \item Phân loại đối tượng (có/không có biển số)
-\end{itemize}
-
-\subsubsection{Các hướng tiếp cận}
-
-\paragraph{Truyền thống}
-\begin{itemize}
-    \item \textbf{Haar Cascade}: Sử dụng các đặc trưng Haar-like
-    \item \textbf{Edge-based}: Dựa trên phát hiện biên và hình dạng hình học
-    \item Hạn chế: Độ chính xác thấp, nhạy với điều kiện ánh sáng
-\end{itemize}
-
-\paragraph{Học sâu}
-\begin{itemize}
-    \item \textbf{YOLO (You Only Look Once)}: Phát hiện real-time, xử lý toàn bộ ảnh một lần
-    \item \textbf{SSD (Single Shot Detector)}: Tương tự YOLO, sử dụng multi-scale features
-    \item \textbf{Faster R-CNN}: Độ chính xác cao nhưng chậm hơn
-\end{itemize}
-
-\subsection{Mô hình học sâu sử dụng}
-
-\subsubsection{YOLOv5}
-
-\paragraph{Kiến trúc tổng quan}
-\begin{itemize}
-    \item Backbone: CSPDarknet53 (Cross Stage Partial Network)
-    \item Neck: PANet (Path Aggregation Network)
-    \item Head: 3 scale detection heads
-\end{itemize}
-
-\paragraph{Đầu vào / Đầu ra}
-\begin{itemize}
-    \item \textbf{Input}: Ảnh RGB, kích thước 640x640 pixels
-    \item \textbf{Output}: Bounding boxes với format $(x_1, y_1, x_2, y_2, confidence, class\_id)$
-\end{itemize}
-
-\paragraph{Loss function}
-\begin{itemize}
-    \item Classification loss: BCE (Binary Cross Entropy)
-    \item Localization loss: CIoU (Complete IoU)
-    \item Objectness loss: BCE
-\end{itemize}
-
-\paragraph{Ưu điểm – Hạn chế}
-
-\textbf{Ưu điểm}:
-\begin{itemize}
-    \item Tốc độ nhanh, phù hợp real-time
-    \item Độ chính xác cao
-    \item Dễ tích hợp và triển khai
-\end{itemize}
-
-\textbf{Hạn chế}:
-\begin{itemize}
-    \item Cần dataset lớn để huấn luyện
-    \item Yêu cầu GPU để đạt hiệu năng tốt
-    \item Khó phát hiện đối tượng nhỏ
-\end{itemize}
-
-\section{PHƯƠNG PHÁP ĐỀ XUẤT}
-
-\subsection{Tổng quan hệ thống}
-
-\subsubsection{Pipeline xử lý}
-
-Hệ thống được thiết kế theo kiến trúc pipeline đa luồng:
-
-\begin{verbatim}
-Ảnh gốc
-  ↓
-[Sobel song song] → Ảnh tăng cường biên
-  ↓
-[Model phát hiện biển số] → Bounding boxes
-  ↓
-[OCR ký tự] → Text biển số
-  ↓
-Kết quả cuối cùng
-\end{verbatim}
-
-\subsubsection{Các thành phần chính}
+Hệ thống được thiết kế theo kiến trúc pipeline đa tầng với các giai đoạn xử lý tuần tự:
 
 \begin{enumerate}
-    \item \textbf{Capture Stage}: Đọc frame từ camera/video
-    \item \textbf{Sobel Filter Stage}: Phát hiện biên với song song hóa
-    \item \textbf{Detection Stage}: Phát hiện vùng biển số bằng YOLOv5
-    \item \textbf{OCR Stage}: Nhận diện ký tự trên biển số
-    \item \textbf{Render Stage}: Hiển thị kết quả
+    \item \textbf{Ảnh gốc:} Nhận ảnh đầu vào từ camera hoặc file
+    \item \textbf{Sobel song song:} Áp dụng bộ lọc Sobel với tối ưu song song (SIMD/OpenMP/CUDA)
+    \item \textbf{Ảnh tăng cường biên:} Kết quả Sobel được sử dụng để tăng cường thông tin biên
+    \item \textbf{Model phát hiện biển số:} YOLOv5 phát hiện vùng biển số từ ảnh đã xử lý
+    \item \textbf{Kết quả bounding box:} Trả về tọa độ và confidence của các biển số phát hiện được
+    \item \textbf{OCR (tùy chọn):} Nhận dạng ký tự từ các vùng biển số đã phát hiện
 \end{enumerate}
+
+\subsection{Sơ đồ khối}
+
+Pipeline được triển khai với 5 threads độc lập (Task Parallelism):
+
+\begin{verbatim}
++-------------+
+|  Capture    | -> qCapture_ (5 frames)
++------+------+
+       |
++------v------+
+|   Sobel     | -> qSobel_ (5 frames)
+| (SIMD/GPU)  |
++------+------+
+       |
++------v------+
+|  Detection  | -> qDetect_ (5 frames)
++------+------+
+       |
++------v------+
+|    OCR      | -> qOCR_ (5 frames)
+| (Multi-ROI) |
++------+------+
+       |
++------v------+
+|   Render    |
++-------------+
+\end{verbatim}
+
+\section{Sobel song song}
+
+\subsection{Cách chia ảnh}
+
+Để tối ưu song song hóa, ảnh được chia theo các chiến lược:
+
+\textbf{Theo dòng:} Chia ảnh thành các dòng và gán mỗi dòng cho một thread (OpenMP):
+\begin{lstlisting}
+#pragma omp parallel for
+for (int y = 1; y < rows - 1; ++y) {
+    // Xử lý dòng y
+}
+\end{lstlisting}
+
+\textbf{Theo block:} Chia ảnh thành các block 2D (ví dụ 64x64 pixels) và xử lý song song các block (có thể mở rộng trong tương lai).
+
+\subsection{Chiến lược song song}
+
+\textbf{Multi-thread CPU:} Sử dụng OpenMP để tự động phân phối công việc cho các lõi CPU có sẵn. Mỗi thread xử lý một phần của ảnh độc lập.
+
+\textbf{GPU kernel:} Triển khai CUDA kernel với mỗi thread xử lý một pixel hoặc một nhóm pixel nhỏ. Sử dụng shared memory để tối ưu truy cập dữ liệu.
+
+\textbf{SIMD vectorization:} Sử dụng AVX-256 intrinsics để xử lý 8 pixels cùng lúc trong mỗi thread, kết hợp với OpenMP để song song hóa theo dòng.
+
+\subsection{Pseudocode Sobel song song}
+
+\begin{lstlisting}
+// Sobel với SIMD + OpenMP
+function sobelSIMD(src, dst):
+    rows = src.rows
+    cols = src.cols
+    
+    #pragma omp parallel for
+    for y = 1 to rows-2:
+        for x = 1 to cols-9:  // Xử lý 8 pixels cùng lúc
+            // Load 8 pixels từ 3 dòng (prev, curr, next)
+            pixels = load_8_pixels_AVX(src, x, y)
+            
+            // Tính Gx và Gy cho 8 pixels
+            gx = compute_gradient_x_AVX(pixels)
+            gy = compute_gradient_y_AVX(pixels)
+            
+            // Tính magnitude: sqrt(gx^2 + gy^2)
+            magnitude = sqrt_AVX(gx^2 + gy^2)
+            
+            // Lưu kết quả
+            store_8_pixels_AVX(dst, x, y, magnitude)
+\end{lstlisting}
+
+\section{Tích hợp Sobel vào pipeline AI}
+
+\subsection{Sobel trước model}
+
+Bộ lọc Sobel được áp dụng trước khi đưa vào mô hình detection để:
+\begin{itemize}
+    \item Tăng cường thông tin biên của biển số
+    \item Giảm nhiễu và các chi tiết không liên quan
+    \item Tạo đặc trưng đầu vào tốt hơn cho mô hình
+\end{itemize}
+
+\subsection{Chuẩn hóa ảnh}
+
+Sau khi áp dụng Sobel, ảnh được chuẩn hóa:
+\begin{itemize}
+    \item Chuyển đổi sang grayscale nếu cần
+    \item Normalize giá trị pixel về khoảng [0, 1] hoặc [-1, 1]
+    \item Resize về kích thước input của model (640x640 cho detection)
+\end{itemize}
+
+\subsection{Resize phù hợp input model}
+
+Model YOLOv5 yêu cầu input kích thước cố định (640x640). Pipeline tự động resize ảnh với giữ nguyên tỷ lệ khung hình và thêm padding nếu cần.
+
+\section{Mô hình phát hiện biển số}
+
+\subsection{Cấu trúc model}
+
+Model detection sử dụng YOLOv5-nano với cấu trúc:
+\begin{itemize}
+    \item Input layer: 640x640x3 (RGB)
+    \item Backbone: CSPDarknet53 với các lớp convolution và residual blocks
+    \item Neck: PANet để tổng hợp đặc trưng đa tỷ lệ
+    \item Head: Detection head với 3 scale (small, medium, large objects)
+\end{itemize}
+
+\subsection{Input shape}
+
+\begin{itemize}
+    \item Kích thước: 640x640 pixels
+    \item Channels: 3 (RGB)
+    \item Data type: Float32, giá trị normalized [0, 1]
+\end{itemize}
+
+\subsection{Output bounding box}
+
+Model trả về:
+\begin{itemize}
+    \item Tọa độ bounding box: $(x_{center}, y_{center}, width, height)$ hoặc $(x_1, y_1, x_2, y_2)$
+    \item Confidence score: Độ tin cậy của detection (0-1)
+    \item Class ID: ID của lớp (biển số)
+\end{itemize}
+
+\subsection{Tham số huấn luyện}
+
+Model được huấn luyện với:
+\begin{itemize}
+    \item Dataset: Tập dữ liệu biển số xe Việt Nam
+    \item Epochs: 61 (cho detection), 62 (cho OCR)
+    \item Batch size: Phụ thuộc vào GPU memory
+    \item Learning rate: Sử dụng learning rate schedule của YOLOv5
+    \item Augmentation: Random flip, color jitter, mosaic, mixup
+\end{itemize}
+
+\section{Luồng xử lý tổng thể}
+
+\subsection{Sơ đồ khối hệ thống}
+
+Hệ thống sử dụng kiến trúc pipeline với 5 threads độc lập và các queue thread-safe để truyền dữ liệu giữa các stage:
+
+\begin{itemize}
+    \item \textbf{Thread 1 - Capture:} Đọc frame từ camera/file và đưa vào qCapture\_
+    \item \textbf{Thread 2 - Sobel:} Lấy frame từ qCapture\_, áp dụng Sobel, đưa vào qSobel\_
+    \item \textbf{Thread 3 - Detection:} Lấy frame từ qSobel\_, chạy detection model, đưa vào qDetect\_
+    \item \textbf{Thread 4 - OCR:} Lấy frame từ qDetect\_, cắt ROI và chạy OCR cho tất cả biển số song song, đưa vào qOCR\_
+    \item \textbf{Thread 5 - Render:} Lấy frame từ qOCR\_, vẽ bounding box và text, hiển thị kết quả
+\end{itemize}
+
+\subsection{Trình tự xử lý dữ liệu}
+
+Mỗi frame đi qua các bước sau:
+
+\begin{enumerate}
+    \item \textbf{Capture:} Frame được đọc và đóng gói vào FramePacket
+    \item \textbf{Sobel:} Áp dụng Sobel filter (ưu tiên CUDA, fallback SIMD, cuối cùng OpenMP scalar)
+    \item \textbf{Preprocessing:} Resize, normalize, chuyển đổi format cho model
+    \item \textbf{Detection:} Chạy YOLOv5 detection model qua ONNX Runtime
+    \item \textbf{Post-processing:} NMS (Non-Maximum Suppression) để loại bỏ duplicate detections
+    \item \textbf{OCR:} Với mỗi bounding box, cắt ROI và chạy OCR model (song song nếu có nhiều biển số)
+    \item \textbf{Render:} Vẽ kết quả lên frame và hiển thị
+\end{enumerate}
+
+\chapter{CÀI ĐẶT VÀ THỰC NGHIỆM}
+
+\section{Môi trường thực nghiệm}
+
+\subsection{Phần cứng}
+
+\textbf{CPU:} Processor đa lõi hỗ trợ AVX2 (Advanced Vector Extensions 2) để tận dụng SIMD vectorization.
+
+\textbf{GPU:} NVIDIA GPU với CUDA support (tùy chọn, nếu có sẽ sử dụng CUDA kernel cho Sobel).
+
+\textbf{Bộ nhớ:} RAM đủ để xử lý ảnh và load model ONNX vào memory.
+
+\subsection{Phần mềm}
+
+\textbf{Programming Language:} C++17 với các thư viện:
+\begin{itemize}
+    \item OpenCV 4.x: Xử lý ảnh cơ bản, I/O
+    \item ONNX Runtime 1.16.3: Chạy inference cho YOLOv5 models
+    \item OpenMP: Song song hóa đa luồng trên CPU
+    \item CUDA Toolkit (nếu có GPU): Compile và chạy CUDA kernels
+\end{itemize}
+
+\textbf{Framework AI:} ONNX Runtime cho inference, models được export từ PyTorch (YOLOv5) sang ONNX format.
+
+\textbf{Build System:} CMake hoặc script build tự động với các flags:
+\begin{itemize}
+    \item \texttt{-fopenmp}: Bật OpenMP
+    \item \texttt{-mavx2}: Bật AVX-256 instructions
+    \item \texttt{-std=c++17}: C++ standard
+\end{itemize}
+
+\section{Dataset}
+
+\subsection{Nguồn dữ liệu}
+
+Dataset được sử dụng để huấn luyện model detection và OCR:
+\begin{itemize}
+    \item Tập dữ liệu biển số xe Việt Nam
+    \item Bao gồm nhiều điều kiện: ban ngày, ban đêm, nhiều góc chụp
+    \item Đã được annotate với bounding boxes và text labels
+\end{itemize}
+
+\subsection{Số lượng ảnh}
+
+\begin{itemize}
+    \item Training set: Khoảng vài nghìn ảnh
+    \item Validation set: Khoảng 20\% của training set
+    \item Test set: Ảnh thực tế từ camera hoặc file
+\end{itemize}
+
+\subsection{Điều kiện chụp}
+
+Dataset bao gồm các điều kiện đa dạng:
+\begin{itemize}
+    \item Ánh sáng: Ban ngày, ban đêm, bóng râm
+    \item Góc chụp: Trực diện, nghiêng, từ trên xuống
+    \item Khoảng cách: Gần, xa, độ phân giải khác nhau
+    \item Môi trường: Trong nhà, ngoài trời, bãi đỗ xe
+\end{itemize}
+
+\section{Các kịch bản thực nghiệm}
+
+\subsection{Không Sobel}
+
+Baseline: Chạy detection model trực tiếp trên ảnh gốc không qua bộ lọc Sobel.
+
+\textbf{Mục đích:} Đánh giá hiệu suất cơ bản của model không có tiền xử lý.
+
+\subsection{Sobel đơn luồng}
+
+Áp dụng bộ lọc Sobel với implementation scalar (không song song hóa).
+
+\textbf{Mục đích:} Đo lường overhead của Sobel và so sánh với baseline.
 
 \subsection{Sobel song song}
 
-\subsubsection{Cách chia ảnh}
+Áp dụng bộ lọc Sobel với các phương pháp song song hóa:
 
-\paragraph{Theo dòng (Row-based)}
-\begin{itemize}
-    \item Chia ảnh thành các dòng
-    \item Mỗi thread xử lý một hoặc nhiều dòng
-    \item Phù hợp với OpenMP
-\end{itemize}
+\textbf{CPU OpenMP (scalar):} Song song hóa theo dòng với OpenMP nhưng vẫn dùng code scalar.
 
-\paragraph{Theo block (Block-based)}
-\begin{itemize}
-    \item Chia ảnh thành các block 2D (ví dụ: 64x64 pixels)
-    \item Mỗi thread/block xử lý một vùng
-    \item Phù hợp với GPU CUDA
-\end{itemize}
+\textbf{CPU SIMD (AVX-256):} Kết hợp OpenMP và SIMD vectorization, xử lý 8 pixels cùng lúc.
 
-\subsubsection{Chiến lược song song}
+\textbf{GPU CUDA:} Triển khai CUDA kernel để xử lý song song trên GPU.
 
-\paragraph{Multi-thread CPU (OpenMP)}
-\begin{lstlisting}[caption=Sobel với OpenMP]
-#pragma omp parallel for
-for (int y = 1; y < rows - 1; ++y) {
-    for (int x = 1; x < cols - 1; ++x) {
-        // Tinh Sobel cho pixel (x,y)
-    }
-}
-\end{lstlisting}
+\section{Chỉ số đánh giá}
 
-\paragraph{GPU Kernel (CUDA)}
-\begin{lstlisting}[caption=Sobel CUDA Kernel]
-__global__ void sobelKernel(uchar* src, uchar* dst, 
-                            int width, int height) {
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    // Mỗi thread xử lý 1 pixel
-}
-\end{lstlisting}
+\subsection{Độ chính xác (Accuracy)}
 
-\paragraph{SIMD Vectorization (AVX-256)}
-\begin{lstlisting}[caption=Sobel với SIMD]
-// Xử lý 8 pixels cùng lúc
-__m256 gx = _mm256_add_ps(...);
-__m256 gy = _mm256_add_ps(...);
-__m256 mag = _mm256_sqrt_ps(...);
-\end{lstlisting}
-
-\subsubsection{Pseudocode Sobel song song}
-
-\textbf{Thuật toán: Sobel Filter Song Song}
-
-\begin{verbatim}
-Input:  Anh dau vao I (grayscale)
-Output: Anh bien E
-
-1. Chia anh thanh N vung
-2. PARALLEL for moi vung i tu 1 den N:
-   a. FOR moi pixel (x,y) trong vung i:
-      - Tinh G_x = sum K_x * I(x+i, y+j)
-      - Tinh G_y = sum K_y * I(x+i, y+j)
-      - E(x,y) = sqrt(G_x^2 + G_y^2)
-3. RETURN E
-\end{verbatim}
-
-\subsection{Tích hợp Sobel vào pipeline AI}
-
-\subsubsection{Sobel trước model}
-
-Sobel filter được áp dụng như bước tiền xử lý trước khi đưa vào model:
-
-\begin{itemize}
-    \item \textbf{Làm nổi biên}: Tăng cường các cạnh của biển số
-    \item \textbf{Giảm nhiễu}: Lọc bỏ các chi tiết không cần thiết
-    \item \textbf{Cải thiện contrast}: Làm rõ hơn sự khác biệt giữa biển số và nền
-\end{itemize}
-
-\subsubsection{Chuẩn hóa ảnh}
-
-\begin{itemize}
-    \item Chuyển ảnh Sobel về grayscale (nếu cần)
-    \item Normalize giá trị pixel về khoảng [0, 1]
-    \item Resize về kích thước input của model (640x640)
-\end{itemize}
-
-\subsubsection{Resize phù hợp input model}
-
-Model YOLOv5 yêu cầu input 640x640 pixels:
-
-\begin{lstlisting}[caption=Pre-processing cho model]
-cv::Mat sobel;  // Ảnh sau Sobel
-cv::Mat resized;
-cv::resize(sobel, resized, cv::Size(640, 640));
-resized.convertTo(resized, CV_32F, 1.0/255.0);
-\end{lstlisting}
-
-\subsection{Mô hình phát hiện biển số}
-
-\subsubsection{Cấu trúc model}
-
-\begin{itemize}
-    \item \textbf{Model}: YOLOv5 nano (YOLOv5n)
-    \item \textbf{Format}: ONNX (để deploy trong C++)
-    \item \textbf{Input size}: 640x640x3
-\end{itemize}
-
-\subsubsection{Input shape}
-
-\begin{itemize}
-    \item Kích thước: [1, 3, 640, 640]
-    \item Kiểu dữ liệu: Float32
-    \item Giá trị: Normalized về [0, 1]
-\end{itemize}
-
-\subsubsection{Output bounding box}
-
-\begin{itemize}
-    \item Format: [batch, num\_detections, 6]
-    \item 6 giá trị: $(x_1, y_1, x_2, y_2, confidence, class\_id)$
-    \item Tọa độ được normalize về [0, 1], cần scale về kích thước ảnh gốc
-\end{itemize}
-
-\subsubsection{Tham số huấn luyện}
-
-\begin{itemize}
-    \item Dataset: Custom dataset biển số Việt Nam
-    \item Epochs: 100
-    \item Batch size: 16
-    \item Learning rate: 0.01
-    \item Optimizer: SGD với momentum
-\end{itemize}
-
-\subsection{Luồng xử lý tổng thể}
-
-\subsubsection{Sơ đồ khối hệ thống}
-
-\begin{figure}[H]
-\centering
-\begin{verbatim}
-┌─────────────┐
-│  Capture    │ → qCapture_ (5 frames)
-└──────┬──────┘
-       │
-┌──────▼──────┐
-│   Sobel     │ → qSobel_ (5 frames)
-│ (SIMD/CUDA) │
-└──────┬──────┘
-       │
-┌──────▼──────┐
-│  Detection  │ → qDetect_ (5 frames)
-└──────┬──────┘
-       │
-┌──────▼──────┐
-│    OCR      │ → qOCR_ (5 frames)
-│ (Multi-ROI) │
-└──────┬──────┘
-       │
-┌──────▼──────┐
-│   Render    │
-└─────────────┘
-\end{verbatim}
-\caption{Kiến trúc Pipeline đa luồng}
-\end{figure}
-
-\subsubsection{Trình tự xử lý dữ liệu}
-
-\begin{enumerate}
-    \item \textbf{Capture}: Đọc frame từ camera/video vào queue
-    \item \textbf{Sobel}: Áp dụng Sobel filter song song, đẩy vào queue tiếp theo
-    \item \textbf{Detection}: Phát hiện biển số, trả về bounding boxes
-    \item \textbf{OCR}: Nhận diện ký tự trên từng vùng biển số (song song nếu có nhiều ROI)
-    \item \textbf{Render}: Vẽ kết quả lên frame và hiển thị
-\end{enumerate}
-
-\section{CÀI ĐẶT VÀ THỰC NGHIỆM}
-
-\subsection{Môi trường thực nghiệm}
-
-\subsubsection{Phần cứng}
-
-\begin{itemize}
-    \item \textbf{CPU}: [Ghi rõ model CPU, số cores]
-    \item \textbf{GPU}: [Ghi rõ model GPU nếu có, ví dụ: NVIDIA GTX/RTX]
-    \item \textbf{RAM}: [Số GB]
-    \item \textbf{OS}: Linux (Ubuntu/Debian)
-\end{itemize}
-
-\subsubsection{Phần mềm}
-
-\begin{itemize}
-    \item \textbf{Language}: C++17
-    \item \textbf{OpenCV}: Version 4.x (xử lý ảnh)
-    \item \textbf{ONNX Runtime}: Version 1.16.3 (inference model)
-    \item \textbf{CUDA}: Version [nếu có GPU]
-    \item \textbf{Compiler}: GCC với flags \texttt{-fopenmp -mavx2}
-\end{itemize}
-
-\subsection{Dataset}
-
-\subsubsection{Nguồn dữ liệu}
-
-\begin{itemize}
-    \item Dataset custom: Ảnh biển số xe Việt Nam
-    \item Nguồn: Thu thập từ camera giao thông, bãi đỗ xe
-\end{itemize}
-
-\subsubsection{Số lượng ảnh}
-
-\begin{itemize}
-    \item Training set: [Số lượng]
-    \item Validation set: [Số lượng]
-    \item Test set: [Số lượng]
-\end{itemize}
-
-\subsubsection{Điều kiện chụp}
-
-\begin{itemize}
-    \item Đa dạng điều kiện ánh sáng (ngày/đêm)
-    \item Nhiều góc chụp khác nhau
-    \item Độ phân giải: 640x480 đến 1920x1080
-    \item Có nhiễu và blur trong một số ảnh
-\end{itemize}
-
-\subsection{Các kịch bản thực nghiệm}
-
-\subsubsection{Không Sobel}
-
-\begin{itemize}
-    \item Đưa ảnh gốc trực tiếp vào model
-    \item Không có bước tiền xử lý
-    \item Baseline để so sánh
-\end{itemize}
-
-\subsubsection{Sobel đơn luồng}
-
-\begin{itemize}
-    \item Áp dụng Sobel filter tuần tự (không song song)
-    \item Xử lý từng pixel một cách tuần tự
-    \item Đo thời gian xử lý
-\end{itemize}
-
-\subsubsection{Sobel song song}
-
-\begin{itemize}
-    \item \textbf{CPU OpenMP}: Chia ảnh theo dòng, mỗi thread xử lý một phần
-    \item \textbf{CPU SIMD}: Sử dụng AVX-256 để xử lý 8 pixels cùng lúc
-    \item \textbf{GPU CUDA}: Mỗi thread GPU xử lý một pixel
-\end{itemize}
-
-\subsection{Chỉ số đánh giá}
-
-\subsubsection{Độ chính xác (Precision, Recall, mAP)}
-
-\begin{itemize}
-    \item \textbf{Precision}: Tỷ lệ detection đúng trong tổng số detection
-    \item \textbf{Recall}: Tỷ lệ biển số được phát hiện trong tổng số biển số thực tế
-    \item \textbf{mAP (mean Average Precision)}: Độ chính xác trung bình ở các mức IoU khác nhau
-\end{itemize}
-
-\subsubsection{Thời gian xử lý}
-
-\begin{itemize}
-    \item Thời gian Sobel filter (ms/frame)
-    \item Thời gian detection (ms/frame)
-    \item Thời gian OCR (ms/frame)
-    \item Tổng thời gian pipeline (ms/frame)
-\end{itemize}
-
-\subsubsection{FPS (Frames Per Second)}
-
-Số frame xử lý được trong 1 giây:
-
+\textbf{Precision:} Tỷ lệ các detection đúng trong tổng số detections:
 \begin{equation}
-FPS = \frac{1000}{thời\_gian\_xử\_lý\_(ms)}
+Precision = \frac{TP}{TP + FP}
 \end{equation}
 
-\subsubsection{Latency}
+\textbf{Recall:} Tỷ lệ các biển số thực tế được phát hiện:
+\begin{equation}
+Recall = \frac{TP}{TP + FN}
+\end{equation}
 
-Thời gian từ khi nhận frame đến khi có kết quả (end-to-end latency).
+\textbf{mAP (mean Average Precision):} Trung bình của Average Precision ở các ngưỡng IoU khác nhau.
 
-\subsection{Kết quả thực nghiệm}
+\subsection{Thời gian xử lý}
 
-\subsubsection{Bảng so sánh hiệu năng Sobel Filter}
+\textbf{Latency:} Thời gian xử lý một frame từ đầu đến cuối (end-to-end latency).
 
-Benchmark được chạy trên ảnh \texttt{bienso.jpg} (800x600 pixels, 0.48 MP), 100 runs:
+\textbf{Throughput:} Số frame xử lý được trong một giây (FPS - Frames Per Second).
+
+\subsection{FPS}
+
+FPS được tính bằng:
+\begin{equation}
+FPS = \frac{1}{Latency_{avg}}
+\end{equation}
+
+Trong đó $Latency_{avg}$ là thời gian trung bình xử lý một frame.
+
+\subsection{Latency}
+
+Đo lường latency cho từng stage:
+\begin{itemize}
+    \item Sobel processing time
+    \item Detection inference time
+    \item OCR inference time
+    \item Total pipeline latency
+\end{itemize}
+
+\section{Kết quả thực nghiệm}
+
+\subsection{Bảng so sánh}
+
+Dựa trên benchmark results từ file \texttt{benchmark\_results.txt}, kết quả cho ảnh 800x600 pixels (0.48 MP):
 
 \begin{table}[H]
 \centering
+\caption{So sánh hiệu năng các phương pháp Sobel (100 runs average)}
 \begin{tabular}{|l|c|c|c|}
 \hline
-\textbf{Phương pháp} & \textbf{Thời gian (ms)} & \textbf{FPS} & \textbf{Speedup} \\
+\textbf{Phương pháp} & \textbf{Thời gian (ms)} & \textbf{Speedup} & \textbf{FPS} \\
 \hline
-CPU OpenMP (scalar) & 7.144 & 140.0 & 1.0x (baseline) \\
-\hline
-CPU SIMD (AVX-256) & 1.885 & 530.4 & \textbf{3.79x} \\
-\hline
-GPU CUDA & \textbf{0.494} & \textbf{2025.5} & \textbf{14.47x} \\
+CPU OpenMP (scalar) & 7.144 & 1.0x (baseline) & 140.0 \\
+CPU SIMD (AVX-256) & 1.885 & 3.79x & 530.4 \\
+GPU CUDA & 0.494 & 14.47x & 2025.5 \\
 \hline
 \end{tabular}
-\caption{Kết quả benchmark Sobel filter - Data Parallelism}
 \end{table}
-
-\subsubsection{Phân tích kết quả}
-
-\begin{itemize}
-    \item \textbf{SIMD vectorization}: Cải thiện \textbf{3.79x} so với scalar code bằng cách xử lý 8 pixels cùng lúc
-    \item \textbf{CUDA GPU}: Cải thiện \textbf{14.47x} so với CPU scalar và \textbf{3.82x} so với SIMD
-    \item \textbf{GPU là phương pháp nhanh nhất}: Phù hợp cho xử lý real-time với throughput cao
-\end{itemize}
-
-\subsubsection{Biểu đồ hiệu năng}
-
-\begin{figure}[H]
-\centering
-\begin{verbatim}
-Thời gian xử lý (ms):
-CPU Scalar:  ████████████████████ 7.144
-CPU SIMD:   █████ 1.885
-GPU CUDA:   █ 0.494
-
-Speedup:
-GPU CUDA:   ████████████████████████████████████████ 14.47x
-CPU SIMD:   ████████████ 3.79x
-CPU Scalar: ████ 1.0x
-\end{verbatim}
-\caption{So sánh hiệu năng các phương pháp Sobel}
-\end{figure}
-
-\subsubsection{Kết quả Detection và OCR}
-
-\begin{itemize}
-    \item \textbf{Độ chính xác detection}: [Ghi kết quả nếu có]
-    \item \textbf{Độ chính xác OCR}: [Ghi kết quả nếu có]
-    \item \textbf{Ảnh hưởng của Sobel}: [Phân tích xem Sobel có cải thiện accuracy không]
-\end{itemize}
-
-\section{ĐÁNH GIÁ VÀ THẢO LUẬN}
 
 \subsection{Phân tích kết quả}
 
-\subsubsection{Sobel ảnh hưởng thế nào tới model}
+\textbf{SIMD vectorization:} Cho thấy cải thiện 3.79x so với scalar code, đạt 530.4 FPS. Điều này chứng tỏ việc tận dụng SIMD instructions của CPU rất hiệu quả.
 
+\textbf{GPU CUDA:} Đạt speedup 14.47x so với baseline và 3.82x so với SIMD, đạt 2025.5 FPS. GPU phù hợp cho xử lý real-time với throughput cao.
+
+\textbf{So sánh chi tiết:}
 \begin{itemize}
-    \item \textbf{Tăng cường biên}: Sobel làm nổi bật các cạnh của biển số, giúp model dễ dàng phát hiện hơn
-    \item \textbf{Giảm nhiễu}: Lọc bỏ các chi tiết không cần thiết, tập trung vào thông tin quan trọng
-    \item \textbf{Cải thiện contrast}: Làm rõ hơn sự khác biệt giữa biển số và nền
-    \item \textbf{Ảnh hưởng tiêu cực}: Có thể tăng cường nhiễu nếu ảnh gốc đã có nhiều nhiễu
+    \item CUDA vs CPU scalar: 14.47x nhanh hơn
+    \item CUDA vs SIMD: 3.82x nhanh hơn
+    \item SIMD vs CPU scalar: 3.79x nhanh hơn
 \end{itemize}
 
-\subsubsection{Lợi ích song song hóa}
+\subsection{Biểu đồ hiệu năng}
 
+\textbf{Biểu đồ thời gian xử lý:} (Có thể vẽ biểu đồ cột so sánh thời gian của 3 phương pháp)
+
+\textbf{Biểu đồ FPS:} (Có thể vẽ biểu đồ cột so sánh FPS của 3 phương pháp)
+
+\textbf{Biểu đồ speedup:} (Có thể vẽ biểu đồ cột so sánh speedup so với baseline)
+
+\chapter{ĐÁNH GIÁ VÀ THẢO LUẬN}
+
+\section{Phân tích kết quả}
+
+\subsection{Sobel ảnh hưởng thế nào tới model}
+
+\textbf{Tăng cường thông tin biên:} Bộ lọc Sobel làm nổi bật các cạnh và đường viền trong ảnh, đặc biệt là các đường thẳng ngang và dọc của biển số. Điều này giúp model dễ dàng phát hiện vùng biển số hơn.
+
+\textbf{Giảm nhiễu:} Bằng cách tập trung vào thông tin biên, Sobel giúp loại bỏ các chi tiết không liên quan và nhiễu trong ảnh, tạo đầu vào "sạch" hơn cho model.
+
+\textbf{Ảnh hưởng đến accuracy:} Tùy thuộc vào điều kiện ảnh, Sobel có thể cải thiện hoặc giảm độ chính xác. Với ảnh có nhiều nhiễu hoặc độ tương phản thấp, Sobel thường cải thiện kết quả. Tuy nhiên, với ảnh chất lượng tốt, Sobel có thể không cần thiết hoặc thậm chí làm mất một số thông tin màu sắc.
+
+\subsection{Lợi ích song song hóa}
+
+\textbf{Tăng throughput:} Song song hóa cho phép xử lý nhiều frame hơn trong cùng một khoảng thời gian. Với CUDA, có thể đạt hơn 2000 FPS cho Sobel filter, đủ cho nhiều ứng dụng real-time.
+
+\textbf{Giảm latency:} Mặc dù latency của một frame có thể không giảm nhiều (do overhead), nhưng với pipeline parallelism, các frame có thể được xử lý chồng chéo, giảm latency tổng thể.
+
+\textbf{Tận dụng tài nguyên:} Song song hóa tận dụng tối đa các lõi CPU và GPU, tăng hiệu quả sử dụng phần cứng.
+
+\subsection{So sánh các phương pháp song song}
+
+\textbf{CPU OpenMP (scalar):} Đơn giản, dễ triển khai, hoạt động trên mọi CPU đa lõi. Tuy nhiên, không tận dụng được SIMD units của CPU.
+
+\textbf{CPU SIMD (AVX-256):} Cân bằng tốt giữa hiệu năng và tính tương thích. Không cần GPU, nhưng yêu cầu CPU hỗ trợ AVX2. Đạt speedup 3.79x so với scalar.
+
+\textbf{GPU CUDA:} Nhanh nhất, phù hợp cho throughput cao. Tuy nhiên, yêu cầu GPU NVIDIA và có overhead khi transfer data giữa CPU-GPU.
+
+\section{So sánh với phương pháp khác}
+
+\subsection{Không tiền xử lý}
+
+Pipeline không có Sobel sẽ:
 \begin{itemize}
-    \item \textbf{Tăng throughput}: Xử lý nhiều frame hơn trong cùng một khoảng thời gian
-    \item \textbf{Giảm latency}: Thời gian xử lý mỗi frame giảm đáng kể
-    \item \textbf{Tận dụng tài nguyên}: Sử dụng hiệu quả CPU cores và GPU
-    \item \textbf{Scalability}: Có thể mở rộng với nhiều cores/GPU hơn
+    \item Nhanh hơn (bỏ qua bước Sobel)
+    \item Có thể kém chính xác hơn với ảnh nhiễu hoặc độ tương phản thấp
+    \item Phụ thuộc hoàn toàn vào khả năng của model học sâu
 \end{itemize}
 
-\subsubsection{So sánh các phương pháp song song}
+\subsection{Tiền xử lý truyền thống}
 
+Các phương pháp tiền xử lý khác có thể so sánh:
 \begin{itemize}
-    \item \textbf{CPU OpenMP}: Dễ triển khai, phù hợp với hệ thống không có GPU
-    \item \textbf{CPU SIMD}: Cải thiện đáng kể với chi phí thấp (chỉ cần compiler flags)
-    \item \textbf{GPU CUDA}: Nhanh nhất nhưng yêu cầu GPU và phức tạp hơn trong triển khai
+    \item \textbf{Gaussian Blur:} Làm mờ để giảm nhiễu, nhưng có thể làm mất chi tiết
+    \item \textbf{Histogram Equalization:} Cải thiện độ tương phản, nhưng có thể làm tăng nhiễu
+    \item \textbf{Canny Edge Detection:} Tương tự Sobel nhưng phức tạp hơn, có thể chậm hơn
 \end{itemize}
 
-\subsection{So sánh với phương pháp khác}
+Sobel được chọn vì cân bằng tốt giữa hiệu năng và hiệu quả, dễ song song hóa.
 
-\subsubsection{Không tiền xử lý}
+\section{Hạn chế của đề tài}
 
-\begin{itemize}
-    \item \textbf{Ưu điểm}: Đơn giản, không tốn thời gian tiền xử lý
-    \item \textbf{Nhược điểm}: Model có thể khó phát hiện trong điều kiện ánh sáng xấu hoặc nhiễu
-\end{itemize}
+\subsection{Nhạy nhiễu}
 
-\subsubsection{Tiền xử lý truyền thống}
+Bộ lọc Sobel có thể nhạy cảm với nhiễu trong ảnh. Khi ảnh có nhiều nhiễu, Sobel có thể tạo ra nhiều biên giả (false edges), ảnh hưởng đến kết quả detection.
 
-\begin{itemize}
-    \item \textbf{Gaussian Blur}: Làm mịn ảnh, giảm nhiễu nhưng có thể làm mờ biên
-    \item \textbf{Histogram Equalization}: Cải thiện contrast nhưng có thể làm tăng nhiễu
-    \item \textbf{Sobel}: Tập trung vào biên, phù hợp với bài toán phát hiện biển số
-\end{itemize}
+\textbf{Giải pháp:} Có thể kết hợp với Gaussian blur trước khi áp dụng Sobel để giảm nhiễu.
 
-\subsection{Hạn chế của đề tài}
+\subsection{Điều kiện ánh sáng xấu}
 
-\subsubsection{Nhạy nhiễu}
+Với điều kiện ánh sáng rất tối hoặc quá sáng, Sobel có thể không hiệu quả. Model học sâu có thể xử lý tốt hơn trong các điều kiện này nếu được huấn luyện đúng cách.
 
-\begin{itemize}
-    \item Sobel filter có thể tăng cường nhiễu trong ảnh
-    \item Cần kết hợp với các bộ lọc khác (ví dụ: Gaussian blur trước Sobel)
-\end{itemize}
+\subsection{Tài nguyên phần cứng}
 
-\subsubsection{Điều kiện ánh sáng xấu}
+\textbf{GPU:} Phương pháp CUDA yêu cầu GPU NVIDIA, không phải hệ thống nào cũng có.
+
+\textbf{CPU:} SIMD yêu cầu CPU hỗ trợ AVX2, một số CPU cũ có thể không hỗ trợ.
+
+\textbf{Bộ nhớ:} Pipeline với nhiều frame buffer yêu cầu bộ nhớ đủ lớn, đặc biệt với video độ phân giải cao.
+
+\subsection{Hạn chế khác}
 
 \begin{itemize}
-    \item Trong điều kiện ánh sáng yếu, Sobel có thể không hiệu quả
-    \item Cần cải thiện pre-processing (normalization, contrast enhancement)
+    \item Pipeline hiện tại chưa tối ưu batch inference cho model (xử lý từng frame một)
+    \item Chưa có cơ chế adaptive quality (tự động điều chỉnh chất lượng theo FPS)
+    \item Chưa hỗ trợ multi-GPU để tăng throughput hơn nữa
 \end{itemize}
 
-\subsubsection{Tài nguyên phần cứng}
+\chapter{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
 
+\section{Kết luận}
+
+\subsection{Tổng kết kết quả đạt được}
+
+Đề tài đã thành công trong việc:
+
+\textbf{Triển khai pipeline song song:} Xây dựng hệ thống xử lý ảnh với 5 threads độc lập, tận dụng cả Data Parallelism (SIMD, OpenMP) và Task Parallelism (tách Detection/OCR).
+
+\textbf{Tối ưu Sobel filter:} Đạt được speedup đáng kể:
 \begin{itemize}
-    \item GPU CUDA yêu cầu GPU NVIDIA, không phù hợp với hệ thống nhúng
-    \item SIMD yêu cầu CPU hỗ trợ AVX (từ Intel Sandy Bridge trở lên)
-    \item Cần cân nhắc trade-off giữa hiệu năng và chi phí
+    \item SIMD: 3.79x so với scalar code
+    \item CUDA: 14.47x so với scalar code, 3.82x so với SIMD
 \end{itemize}
 
-\section{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
+\textbf{Tích hợp model học sâu:} Kết hợp thành công YOLOv5 với pipeline tiền xử lý Sobel, tạo hệ thống nhận dạng biển số hoàn chỉnh.
 
-\subsection{Kết luận}
+\subsection{Mức cải thiện so với baseline}
 
-\subsubsection{Tổng kết kết quả đạt được}
-
-Đề tài đã thành công triển khai hệ thống nhận diện biển số xe với các kỹ thuật song song hóa:
-
+So với pipeline không có tối ưu:
 \begin{itemize}
-    \item ✅ Pipeline hoàn chỉnh: Capture → Sobel → Detection → OCR → Render
-    \item ✅ Triển khai 3 phương pháp song song: CPU OpenMP, CPU SIMD, GPU CUDA
-    \item ✅ Tích hợp YOLOv5 cho detection và OCR
-    \item ✅ Đánh giá và so sánh hiệu năng chi tiết
+    \item \textbf{Sobel processing:} Từ 7.144ms (scalar) xuống 0.494ms (CUDA) - cải thiện 14.47x
+    \item \textbf{Throughput:} Từ 140 FPS (scalar) lên 2025.5 FPS (CUDA) cho Sobel filter
+    \item \textbf{Pipeline latency:} Giảm đáng kể nhờ song song hóa các stage
 \end{itemize}
 
-\subsubsection{Mức cải thiện so với baseline}
+\subsection{Đóng góp chính}
 
+\begin{enumerate}
+    \item Đề xuất và triển khai pipeline tiền xử lý song song với nhiều tầng tối ưu
+    \item So sánh chi tiết các phương pháp song song hóa (scalar, SIMD, CUDA)
+    \item Đánh giá ảnh hưởng của Sobel filter đến hiệu suất model học sâu
+    \item Cung cấp benchmark và code mẫu có thể tái sử dụng
+\end{enumerate}
+
+\section{Hướng phát triển}
+
+\subsection{OCR biển số}
+
+\textbf{Cải thiện accuracy:} 
 \begin{itemize}
-    \item \textbf{CPU SIMD}: Cải thiện \textbf{3.79x} so với CPU scalar (từ 7.144ms xuống 1.885ms)
-    \item \textbf{GPU CUDA}: Cải thiện \textbf{14.47x} so với CPU scalar (từ 7.144ms xuống 0.494ms)
-    \item \textbf{Throughput}: Đạt \textbf{2025.5 FPS} với CUDA, phù hợp cho ứng dụng real-time
+    \item Fine-tune OCR model với dataset lớn hơn và đa dạng hơn
+    \item Xử lý các trường hợp đặc biệt: biển số cũ, biển số nước ngoài
+    \item Post-processing để sửa lỗi nhận dạng (spell checking, format validation)
 \end{itemize}
 
-\subsubsection{Đóng góp chính}
-
+\textbf{Tối ưu tốc độ:}
 \begin{itemize}
-    \item Đề xuất pipeline tiền xử lý song song hiệu quả
-    \item Benchmark chi tiết so sánh các phương pháp song song hóa
-    \item Tích hợp thành công Sobel filter với model học sâu
+    \item Batch inference cho nhiều ROI cùng lúc
+    \item Quantization model để giảm kích thước và tăng tốc
+    \item Sử dụng TensorRT cho NVIDIA GPU
 \end{itemize}
 
-\subsection{Hướng phát triển}
+\subsection{Real-time video}
 
-\subsubsection{OCR biển số}
-
+\textbf{Video streaming:}
 \begin{itemize}
-    \item Cải thiện độ chính xác OCR với các kỹ thuật post-processing
-    \item Xử lý các trường hợp đặc biệt (biển số bị mờ, góc nghiêng)
-    \item Tích hợp dictionary để sửa lỗi OCR
+    \item Hỗ trợ RTSP stream từ IP camera
+    \item Xử lý video với frame rate cao (60 FPS+)
+    \item Adaptive frame skipping để duy trì real-time
 \end{itemize}
 
-\subsubsection{Real-time video}
-
+\textbf{Tracking:}
 \begin{itemize}
-    \item Tối ưu pipeline để xử lý video stream real-time
-    \item Sử dụng frame skipping và temporal smoothing
-    \item Tích hợp với hệ thống streaming (RTSP, WebRTC)
+    \item Triển khai object tracking để theo dõi biển số qua nhiều frame
+    \item Giảm số lần chạy detection bằng cách sử dụng tracking
+    \item Cải thiện accuracy bằng cách tích hợp thông tin từ nhiều frame
 \end{itemize}
 
-\subsubsection{Triển khai Edge AI}
+\subsection{Triển khai Edge AI}
 
+\textbf{Optimization cho edge devices:}
 \begin{itemize}
-    \item Tối ưu model cho thiết bị nhúng (Jetson Nano, Raspberry Pi)
-    \item Quantization và pruning để giảm kích thước model
-    \item Sử dụng TensorRT cho inference nhanh hơn
+    \item Model quantization (INT8) để giảm kích thước và tăng tốc
+    \item Model pruning để loại bỏ các tham số không cần thiết
+    \item Knowledge distillation để tạo model nhỏ hơn nhưng vẫn giữ accuracy
 \end{itemize}
 
-\subsubsection{Tối ưu GPU sâu hơn}
-
+\textbf{Hardware acceleration:}
 \begin{itemize}
-    \item Sử dụng CUDA streams để overlap computation và memory transfer
-    \item Tối ưu memory access pattern (coalesced access)
-    \item Sử dụng shared memory và texture memory hiệu quả hơn
-    \item Batch processing để tăng throughput
+    \item Tận dụng NPU (Neural Processing Unit) trên các thiết bị edge
+    \item Optimize cho ARM CPU với NEON SIMD
+    \item Hỗ trợ các framework edge như TensorFlow Lite, ONNX Runtime Mobile
 \end{itemize}
 
-\subsubsection{Mở rộng chức năng}
+\subsection{Tối ưu GPU sâu hơn}
 
+\textbf{CUDA streams:}
 \begin{itemize}
-    \item Hỗ trợ nhiều loại biển số (xe máy, xe tải, v.v.)
-    \item Tích hợp với database để tra cứu thông tin xe
-    \item Phát hiện vi phạm giao thông tự động
+    \item Sử dụng multiple CUDA streams để overlap computation và data transfer
+    \item Pipeline parallelism trên GPU để xử lý nhiều frame cùng lúc
 \end{itemize}
+
+\textbf{Memory optimization:}
+\begin{itemize}
+    \item Unified memory để giảm overhead copy CPU-GPU
+    \item Memory pooling để tái sử dụng buffer
+    \item Tối ưu memory access pattern
+\end{itemize}
+
+\textbf{Multi-GPU:}
+\begin{itemize}
+    \item Phân phối workload cho nhiều GPU
+    \item Một GPU cho detection, GPU khác cho OCR
+    \item Load balancing giữa các GPU
+\end{itemize}
+
+\subsection{Các hướng phát triển khác}
+
+\textbf{Deep learning optimization:}
+\begin{itemize}
+    \item Thử nghiệm các kiến trúc model mới (YOLOv8, YOLOv9, DETR)
+    \item Transfer learning với dataset lớn hơn
+    \item Ensemble methods để tăng accuracy
+\end{itemize}
+
+\textbf{System integration:}
+\begin{itemize}
+    \item REST API để tích hợp với hệ thống khác
+    \item Database để lưu trữ kết quả nhận dạng
+    \item Dashboard để monitoring và quản lý
+\end{itemize}
+
+\textbf{Advanced features:}
+\begin{itemize}
+    \item Nhận dạng loại xe (ô tô, xe máy, xe tải)
+    \item Phát hiện vi phạm (đỗ xe sai, quá tốc độ)
+    \item Phân tích lưu lượng giao thông
+\end{itemize}
+
+\section{Lời cảm ơn}
+
+Xin chân thành cảm ơn thầy/cô hướng dẫn và các bạn đã hỗ trợ trong quá trình thực hiện đề tài.
 
 \appendix
 
-\section{Code Examples}
+\chapter{Mã nguồn quan trọng}
 
-\subsection{Sobel SIMD Implementation}
+\section{Pipeline Architecture}
 
-Xem file: \texttt{Main/SobelSIMD.cpp}
+Kiến trúc pipeline với 5 threads và các queue thread-safe được triển khai trong \texttt{Pipeline.h} và \texttt{Pipeline.cpp}.
 
-\subsection{Sobel CUDA Kernel}
+\section{Sobel SIMD Implementation}
 
-Xem file: \texttt{Main/SobelCuda.cu}
+Implementation Sobel với AVX-256 được triển khai trong \texttt{SobelSIMD.cpp}, sử dụng intrinsics để xử lý 8 pixels cùng lúc.
 
-\subsection{Pipeline Multi-threading}
+\section{CUDA Kernel}
 
-Xem file: \texttt{Main/Pipeline.cpp}
+CUDA kernel cho Sobel được triển khai trong \texttt{SobelCuda.cu}, với mỗi thread xử lý một pixel.
 
-\section{Build Instructions}
-
-\begin{verbatim}
-# Cài đặt dependencies
-sudo apt-get install libopencv-dev
-pip install onnx onnxruntime yolov5
-
-# Export models
-cd Main
-python3 export_torchscript.py
-
-# Build (CPU only)
-g++ -std=c++17 -fopenmp -mavx2 \
-    -I/tmp/onnxruntime-linux-x64-1.16.3/include \
-    Main/main.cpp Main/Pipeline.cpp Main/LPDetector.cpp \
-    Main/LPOCR.cpp Main/SobelSIMD.cpp \
-    -o lp_main \
-    `pkg-config --cflags --libs opencv4` \
-    -L/tmp/onnxruntime-linux-x64-1.16.3/lib -lonnxruntime
-
-# Build với CUDA
-nvcc -c Main/SobelCuda.cu -o SobelCuda.o \
-     -I/usr/local/cuda/include \
-     `pkg-config --cflags opencv4` -arch=sm_50
-g++ -std=c++17 -fopenmp -mavx2 -DUSE_CUDA_SOBEL \
-    Main/main.cpp Main/Pipeline.cpp Main/LPDetector.cpp \
-    Main/LPOCR.cpp Main/SobelSIMD.cpp SobelCuda.o \
-    -o lp_main \
-    `pkg-config --cflags --libs opencv4` \
-    -L/tmp/onnxruntime-linux-x64-1.16.3/lib -lonnxruntime \
-    -L/usr/local/cuda/lib64 -lcudart
-
-# Chạy
-./lp_main 0  # Camera
-./lp_main image.jpg  # Ảnh
-\end{verbatim}
-
-\section{Tài liệu tham khảo}
+\chapter{Bảng ký hiệu và thuật ngữ}
 
 \begin{itemize}
-    \item OpenCV Documentation: \url{https://docs.opencv.org/}
-    \item ONNX Runtime: \url{https://onnxruntime.ai/}
-    \item YOLOv5: \url{https://github.com/ultralytics/yolov5}
-    \item OpenMP Specification: \url{https://www.openmp.org/}
-    \item Intel AVX Intrinsics: \url{https://www.intel.com/content/www/us/en/docs/intrinsics-guide/}
-    \item CUDA Programming Guide: \url{https://docs.nvidia.com/cuda/}
+    \item \textbf{FPS:} Frames Per Second - Số khung hình mỗi giây
+    \item \textbf{Latency:} Độ trễ - Thời gian xử lý từ đầu đến cuối
+    \item \textbf{SIMD:} Single Instruction Multiple Data - Một lệnh xử lý nhiều dữ liệu
+    \item \textbf{AVX:} Advanced Vector Extensions - Mở rộng vector của Intel
+    \item \textbf{CUDA:} Compute Unified Device Architecture - Kiến trúc tính toán của NVIDIA
+    \item \textbf{ONNX:} Open Neural Network Exchange - Định dạng trao đổi mô hình neural network
+    \item \textbf{YOLO:} You Only Look Once - Kiến trúc object detection
+    \item \textbf{NMS:} Non-Maximum Suppression - Loại bỏ detection trùng lặp
+    \item \textbf{ROI:} Region of Interest - Vùng quan tâm
+    \item \textbf{OCR:} Optical Character Recognition - Nhận dạng ký tự quang học
 \end{itemize}
 
 \end{document}
+
