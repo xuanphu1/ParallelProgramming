@@ -191,6 +191,218 @@ Xử lý ảnh có tính chất song song tự nhiên:
 
 \textbf{SIMD / Vectorization:} Sử dụng các lệnh vector của CPU (AVX, SSE) để xử lý nhiều pixel cùng lúc trong một lệnh. Ví dụ: AVX-256 có thể xử lý 8 giá trị float (32-bit) cùng lúc.
 
+\subsection{SIMD Vectorization với AVX-256}
+
+\subsubsection{Nguyên lý hoạt động}
+
+SIMD (Single Instruction Multiple Data) là kỹ thuật cho phép thực hiện cùng một phép toán trên nhiều phần tử dữ liệu đồng thời trong một chu kỳ xung nhịp. AVX-256 (Advanced Vector Extensions 256-bit) là tập lệnh mở rộng của Intel cho phép xử lý 256-bit dữ liệu cùng lúc.
+
+\textbf{Đặc điểm AVX-256:}
+\begin{itemize}
+    \item Độ rộng thanh ghi: 256 bit
+    \item Xử lý được: 8 giá trị float (32-bit) hoặc 4 giá trị double (64-bit) cùng lúc
+    \item Yêu cầu CPU: Intel Sandy Bridge trở lên, AMD Bulldozer trở lên
+    \item Tăng tốc lý thuyết: Tối đa 8x so với scalar code (với float)
+\end{itemize}
+
+\subsubsection{Triển khai Sobel với AVX-256}
+
+Trong đề tài, Sobel filter được triển khai với AVX-256 intrinsics để xử lý 8 pixels cùng lúc:
+
+\textbf{Bước 1: Load dữ liệu}
+\begin{itemize}
+    \item Sử dụng \texttt{\_mm256\_loadu\_si256} hoặc \texttt{\_mm\_loadu\_si128} để load 16 pixels (128-bit) từ mỗi dòng ảnh
+    \item Convert từ 8-bit unsigned char sang 16-bit integer bằng \texttt{\_mm256\_cvtepu8\_epi16}
+    \item Tiếp tục convert sang 32-bit integer và cuối cùng sang float để tính toán chính xác
+\end{itemize}
+
+\textbf{Bước 2: Tính gradient}
+\begin{itemize}
+    \item Gradient X: Áp dụng kernel Sobel Gx cho 8 pixels cùng lúc:
+    \begin{equation}
+    G_x = -P_{00} - 2P_{10} - P_{20} + P_{02} + 2P_{12} + P_{22}
+    \end{equation}
+    \item Gradient Y: Áp dụng kernel Sobel Gy cho 8 pixels cùng lúc:
+    \begin{equation}
+    G_y = -P_{00} - 2P_{01} - P_{02} + P_{20} + 2P_{21} + P_{22}
+    \end{equation}
+    \item Sử dụng các phép toán vector: \texttt{\_mm256\_add\_ps}, \texttt{\_mm256\_sub\_ps}, \texttt{\_mm256\_mul\_ps}
+\end{itemize}
+
+\textbf{Bước 3: Tính magnitude}
+\begin{itemize}
+    \item Magnitude được tính bằng: $M = \sqrt{G_x^2 + G_y^2}$
+    \item Sử dụng \texttt{\_mm256\_sqrt\_ps} để tính căn bậc hai cho 8 giá trị cùng lúc
+    \item Clamp giá trị về [0, 255] bằng \texttt{\_mm256\_min\_ps}
+\end{itemize}
+
+\textbf{Bước 4: Store kết quả}
+\begin{itemize}
+    \item Convert từ float về integer: \texttt{\_mm256\_cvtps\_epi32}
+    \item Pack từ 32-bit về 16-bit: \texttt{\_mm\_packus\_epi32}
+    \item Pack từ 16-bit về 8-bit: \texttt{\_mm\_packus\_epi16}
+    \item Store 8 pixels vào bộ nhớ: \texttt{\_mm\_store\_epi64}
+\end{itemize}
+
+\textbf{Kết hợp với OpenMP:}
+\begin{itemize}
+    \item Sử dụng \texttt{\#pragma omp parallel for} để chia ảnh theo dòng
+    \item Mỗi thread xử lý một nhóm dòng độc lập
+    \item SIMD xử lý 8 pixels trong mỗi dòng, OpenMP xử lý nhiều dòng song song
+    \item Kết quả: Song song hóa 2 tầng (dòng + pixel)
+\end{itemize}
+
+\subsubsection{Ưu điểm và hạn chế của SIMD}
+
+\textbf{Ưu điểm:}
+\begin{itemize}
+    \item Không cần GPU, hoạt động trên mọi CPU hỗ trợ AVX2
+    \item Tăng tốc đáng kể (3-4x) so với scalar code
+    \item Overhead thấp, không có chi phí transfer dữ liệu CPU-GPU
+    \item Dễ tích hợp với code hiện có
+\end{itemize}
+
+\textbf{Hạn chế:}
+\begin{itemize}
+    \item Yêu cầu CPU hỗ trợ AVX2 (không phải CPU nào cũng có)
+    \item Code phức tạp hơn, khó debug
+    \item Cần xử lý đặc biệt cho các pixel ở biên ảnh
+    \item Không tận dụng được sức mạnh của GPU
+\end{itemize}
+
+\subsection{CUDA Parallelism}
+
+\subsubsection{Kiến trúc CUDA}
+
+CUDA (Compute Unified Device Architecture) là kiến trúc tính toán song song của NVIDIA cho phép lập trình viên sử dụng GPU như một bộ xử lý đa lõi.
+
+\textbf{Thành phần chính:}
+\begin{itemize}
+    \item \textbf{Thread:} Đơn vị tính toán nhỏ nhất, mỗi thread xử lý một pixel
+    \item \textbf{Block:} Nhóm các thread (thường 16x16 = 256 threads)
+    \item \textbf{Grid:} Tập hợp các blocks để bao phủ toàn bộ ảnh
+    \item \textbf{Warp:} 32 threads được thực thi đồng thời trên một SM (Streaming Multiprocessor)
+\end{itemize}
+
+\textbf{Memory hierarchy:}
+\begin{itemize}
+    \item \textbf{Global memory:} Bộ nhớ chính của GPU, lớn nhưng chậm
+    \item \textbf{Shared memory:} Bộ nhớ nhanh được chia sẻ giữa các thread trong cùng một block
+    \item \textbf{Registers:} Bộ nhớ nhanh nhất, riêng cho mỗi thread
+\end{itemize}
+
+\subsubsection{Triển khai Sobel với CUDA}
+
+Trong đề tài, Sobel filter được triển khai với CUDA kernel đơn giản:
+
+\textbf{Kernel function:}
+\begin{itemize}
+    \item Mỗi thread xử lý một pixel duy nhất
+    \item Tính toán thread ID từ block và thread index:
+    \begin{lstlisting}
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    \end{lstlisting}
+    \item Kiểm tra biên để tránh truy cập ngoài phạm vi
+    \item Load 9 pixels từ 3x3 neighborhood
+    \item Tính gradient X và Y theo công thức Sobel
+    \item Tính magnitude và clamp về [0, 255]
+    \item Ghi kết quả vào global memory
+\end{itemize}
+
+\textbf{Thread block configuration:}
+\begin{itemize}
+    \item Block size: 16x16 = 256 threads (tối ưu cho hầu hết GPU)
+    \item Grid size: Tính toán để bao phủ toàn bộ ảnh:
+    \begin{equation}
+    grid\_x = \lceil width / block\_x \rceil
+    \end{equation}
+    \begin{equation}
+    grid\_y = \lceil height / block\_y \rceil
+    \end{equation}
+\end{itemize}
+
+\textbf{Memory management:}
+\begin{itemize}
+    \item \textbf{Allocate:} Sử dụng \texttt{cudaMalloc} để cấp phát bộ nhớ trên GPU cho input và output
+    \item \textbf{Transfer:} \texttt{cudaMemcpy} để copy dữ liệu từ CPU sang GPU (Host-to-Device) và ngược lại (Device-to-Host)
+    \item \textbf{Free:} \texttt{cudaFree} để giải phóng bộ nhớ sau khi sử dụng
+\end{itemize}
+
+\textbf{Execution flow:}
+\begin{enumerate}
+    \item Allocate memory trên GPU cho input và output
+    \item Copy ảnh từ CPU memory sang GPU memory (Host-to-Device)
+    \item Launch kernel với grid và block configuration phù hợp
+    \item Synchronize để đợi kernel hoàn thành
+    \item Copy kết quả từ GPU memory về CPU memory (Device-to-Host)
+    \item Free GPU memory
+\end{enumerate}
+
+\subsubsection{Tối ưu hóa CUDA}
+
+\textbf{Memory coalescing:}
+\begin{itemize}
+    \item Các thread trong cùng một warp nên truy cập bộ nhớ liên tiếp để tận dụng memory coalescing
+    \item Trong Sobel kernel, mỗi thread truy cập các pixel khác nhau, nhưng pattern truy cập vẫn hiệu quả
+\end{itemize}
+
+\textbf{Shared memory (có thể cải thiện):}
+\begin{itemize}
+    \item Có thể sử dụng shared memory để cache các dòng ảnh được sử dụng nhiều lần
+    \item Giảm số lần truy cập global memory
+    \item Tuy nhiên, với Sobel 3x3, overhead của shared memory có thể không đáng kể
+\end{itemize}
+
+\textbf{Occupancy:}
+\begin{itemize}
+    \item Block size 16x16 thường đạt occupancy tốt trên hầu hết GPU
+    \item Cần cân bằng giữa số thread per block và số register sử dụng
+\end{itemize}
+
+\subsubsection{Ưu điểm và hạn chế của CUDA}
+
+\textbf{Ưu điểm:}
+\begin{itemize}
+    \item Tốc độ rất cao: 14-15x nhanh hơn CPU scalar code
+    \item Tận dụng hàng nghìn lõi tính toán của GPU
+    \item Phù hợp cho xử lý ảnh lớn và real-time
+    \item Có thể xử lý nhiều ảnh song song (batch processing)
+\end{itemize}
+
+\textbf{Hạn chế:}
+\begin{itemize}
+    \item Yêu cầu GPU NVIDIA và CUDA toolkit
+    \item Overhead của memory transfer CPU-GPU
+    \item Chi phí phần cứng cao hơn
+    \item Code phức tạp hơn, cần kiến thức về GPU programming
+    \item Không portable sang các GPU khác (AMD, Intel)
+\end{itemize}
+
+\subsubsection{So sánh SIMD và CUDA}
+
+\begin{table}[H]
+\centering
+\caption{So sánh SIMD và CUDA cho Sobel filter}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Tiêu chí} & \textbf{SIMD (AVX-256)} & \textbf{CUDA} \\
+\hline
+Tốc độ (speedup) & 3.79x & 14.47x \\
+\hline
+Yêu cầu phần cứng & CPU AVX2 & GPU NVIDIA \\
+\hline
+Overhead & Thấp & Memory transfer \\
+\hline
+Độ phức tạp code & Trung bình & Cao \\
+\hline
+Portability & Tốt & Chỉ NVIDIA \\
+\hline
+Phù hợp & CPU-only systems & High-performance systems \\
+\hline
+\end{tabular}
+\end{table}
+
 \section{Bài toán phát hiện biển số xe}
 
 \subsection{Object Detection}
@@ -323,6 +535,41 @@ Pipeline được triển khai với 5 threads độc lập (Task Parallelism):
 
 \section{Sobel song song}
 
+\subsection{Cơ chế fallback trong implementation}
+
+Đề tài triển khai Sobel filter với cơ chế fallback thông minh, tự động chọn phương pháp tối ưu nhất dựa trên phần cứng có sẵn:
+
+\textbf{Thứ tự ưu tiên:}
+\begin{enumerate}
+    \item \textbf{CUDA (GPU):} Nếu được build với macro \texttt{USE\_CUDA\_SOBEL} và có GPU NVIDIA
+    \item \textbf{SIMD với AVX-256:} Fallback nếu CUDA không khả dụng hoặc không thành công
+    \item \textbf{CPU OpenMP scalar:} Fallback cuối cùng nếu SIMD không thành công (CPU không hỗ trợ AVX2)
+\end{enumerate}
+
+\textbf{Logic trong code:}
+\begin{lstlisting}[language=C++]
+// Data Parallelism: Thử CUDA -> SIMD -> CPU OpenMP
+bool processed = false;
+
+#ifdef USE_CUDA_SOBEL
+if (useGPU_ && sobelCuda(gray, pkt.sobel)) {
+    processed = true;
+}
+#endif
+
+if (!processed && !sobelSIMD(gray, pkt.sobel)) {
+    sobelCPU(gray, pkt.sobel);  // Fallback cuối cùng
+}
+\end{lstlisting}
+
+\textbf{Ý nghĩa:}
+\begin{itemize}
+    \item Hệ thống tự động tận dụng phần cứng tốt nhất có sẵn
+    \item Đảm bảo hoạt động trên mọi hệ thống (có GPU, không có GPU, CPU cũ)
+    \item Người dùng không cần cấu hình thủ công
+    \item Performance tự động tối ưu theo từng môi trường
+\end{itemize}
+
 \subsection{Cách chia ảnh}
 
 Để tối ưu song song hóa, ảnh được chia theo các chiến lược:
@@ -345,30 +592,329 @@ for (int y = 1; y < rows - 1; ++y) {
 
 \textbf{SIMD vectorization:} Sử dụng AVX-256 intrinsics để xử lý 8 pixels cùng lúc trong mỗi thread, kết hợp với OpenMP để song song hóa theo dòng.
 
-\subsection{Pseudocode Sobel song song}
+\subsection{Implementation chi tiết: SIMD với AVX-256}
 
-\begin{lstlisting}
-// Sobel với SIMD + OpenMP
-function sobelSIMD(src, dst):
-    rows = src.rows
-    cols = src.cols
+\subsubsection{Cấu trúc code}
+
+Implementation SIMD trong đề tài sử dụng kết hợp OpenMP và AVX-256 intrinsics:
+
+\begin{lstlisting}[language=C++]
+bool sobelSIMD(const cv::Mat& src, cv::Mat& dst) {
+    const int rows = src.rows;
+    const int cols = src.cols;
+    dst = cv::Mat::zeros(src.size(), CV_8UC1);
     
     #pragma omp parallel for
-    for y = 1 to rows-2:
-        for x = 1 to cols-9:  // Xử lý 8 pixels cùng lúc
-            // Load 8 pixels từ 3 dòng (prev, curr, next)
-            pixels = load_8_pixels_AVX(src, x, y)
-            
-            // Tính Gx và Gy cho 8 pixels
-            gx = compute_gradient_x_AVX(pixels)
-            gy = compute_gradient_y_AVX(pixels)
-            
-            // Tính magnitude: sqrt(gx^2 + gy^2)
-            magnitude = sqrt_AVX(gx^2 + gy^2)
-            
-            // Lưu kết quả
-            store_8_pixels_AVX(dst, x, y, magnitude)
+    for (int y = 1; y < rows - 1; ++y) {
+        const uchar* prevRow = src.ptr<uchar>(y - 1);
+        const uchar* currRow = src.ptr<uchar>(y);
+        const uchar* nextRow = src.ptr<uchar>(y + 1);
+        uchar* dstRow = dst.ptr<uchar>(y);
+        
+        int x = 1;
+        // SIMD processing: 8 pixels at a time
+        for (; x <= cols - 9; x += 8) {
+            // Load và convert pixels
+            // ... AVX intrinsics ...
+        }
+        
+        // Scalar fallback cho pixels còn lại
+        for (; x < cols - 1; ++x) {
+            // Scalar code
+        }
+    }
+}
 \end{lstlisting}
+
+\subsubsection{Chi tiết AVX intrinsics}
+
+\textbf{Load và convert dữ liệu:}
+\begin{itemize}
+    \item Load 16 pixels (128-bit) từ mỗi dòng: \texttt{\_mm\_loadu\_si128}
+    \item Convert từ 8-bit unsigned char sang 16-bit integer: \texttt{\_mm256\_cvtepu8\_epi16}
+    \item Extract 128-bit từ 256-bit register: \texttt{\_mm256\_extracti128\_si256}
+    \item Convert từ 16-bit sang 32-bit integer: \texttt{\_mm256\_cvtepi16\_epi32}
+    \item Convert từ 32-bit integer sang float: \texttt{\_mm256\_cvtepi32\_ps}
+\end{itemize}
+
+\textbf{Tính toán gradient:}
+\begin{itemize}
+    \item Tạo constant vector: \texttt{\_mm256\_set1\_ps(2.0f)} để nhân với hệ số 2
+    \item Phép nhân vector: \texttt{\_mm256\_mul\_ps} để nhân 8 giá trị float cùng lúc
+    \item Phép cộng vector: \texttt{\_mm256\_add\_ps} để cộng 8 giá trị
+    \item Phép trừ vector: \texttt{\_mm256\_sub\_ps} để trừ 8 giá trị
+\end{itemize}
+
+\textbf{Tính magnitude và store:}
+\begin{itemize}
+    \item Tính căn bậc hai: \texttt{\_mm256\_sqrt\_ps} cho 8 giá trị float
+    \item Clamp giá trị: \texttt{\_mm256\_min\_ps(mag, \_mm256\_set1\_ps(255.0f))}
+    \item Convert từ float về integer: \texttt{\_mm256\_cvtps\_epi32}
+    \item Pack từ 32-bit về 16-bit: \texttt{\_mm\_packus\_epi32}
+    \item Pack từ 16-bit về 8-bit: \texttt{\_mm\_packus\_epi16}
+    \item Store 8 pixels: \texttt{\_mm\_store\_epi64}
+\end{itemize}
+
+\subsubsection{Xử lý biên ảnh}
+
+Do kernel Sobel 3x3 yêu cầu các pixel lân cận, các pixel ở biên ảnh (dòng đầu, dòng cuối, cột đầu, cột cuối) không thể xử lý bằng SIMD. Có hai cách xử lý:
+
+\begin{enumerate}
+    \item \textbf{Bỏ qua biên:} Để giá trị 0 (đã được khởi tạo bằng \texttt{cv::Mat::zeros})
+    \item \textbf{Scalar fallback:} Xử lý các pixel còn lại ở cuối mỗi dòng bằng code scalar
+\end{enumerate}
+
+Trong implementation, code sử dụng cả hai cách: bỏ qua biên dọc và xử lý scalar cho các pixel còn lại ở cuối mỗi dòng.
+
+\subsection{Implementation chi tiết: CUDA Kernel}
+
+\subsubsection{Kernel function}
+
+CUDA kernel được định nghĩa với modifier \texttt{\_\_global\_\_} để có thể được gọi từ CPU:
+
+\begin{lstlisting}[language=C++]
+__global__ void sobelKernel(const unsigned char* src, 
+                             unsigned char* dst,
+                             int width, int height, 
+                             int srcStep, int dstStep) {
+    // Tính toán thread ID
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    
+    // Kiểm tra biên
+    if (x <= 0 || y <= 0 || x >= width - 1 || y >= height - 1) {
+        return;
+    }
+    
+    // Load 3x3 neighborhood
+    const unsigned char* row0 = src + (y - 1) * srcStep;
+    const unsigned char* row1 = src + y * srcStep;
+    const unsigned char* row2 = src + (y + 1) * srcStep;
+    
+    int p00 = row0[x - 1], p01 = row0[x], p02 = row0[x + 1];
+    int p10 = row1[x - 1], p11 = row1[x], p12 = row1[x + 1];
+    int p20 = row2[x - 1], p21 = row2[x], p22 = row2[x + 1];
+    
+    // Tính gradient
+    int gx = -p00 - 2*p10 - p20 + p02 + 2*p12 + p22;
+    int gy = -p00 - 2*p01 - p02 + p20 + 2*p21 + p22;
+    
+    // Tính magnitude
+    float mag = sqrtf((float)(gx*gx + gy*gy));
+    if (mag > 255.0f) mag = 255.0f;
+    
+    // Store kết quả
+    unsigned char* drow = dst + y * dstStep;
+    drow[x] = (unsigned char)mag;
+}
+\end{lstlisting}
+
+\subsubsection{Host code}
+
+Code trên CPU (host) quản lý memory và launch kernel:
+
+\begin{lstlisting}[language=C++]
+bool sobelCuda(const cv::Mat& srcGray, cv::Mat& dstEdge) {
+    int width = srcGray.cols;
+    int height = srcGray.rows;
+    
+    // Allocate GPU memory
+    unsigned char *d_src, *d_dst;
+    size_t bytes = width * height * sizeof(unsigned char);
+    cudaMalloc(&d_src, bytes);
+    cudaMalloc(&d_dst, bytes);
+    
+    // Copy từ CPU sang GPU
+    cudaMemcpy(d_src, srcGray.data, bytes, 
+               cudaMemcpyHostToDevice);
+    
+    // Configure kernel launch
+    dim3 block(16, 16);  // 256 threads per block
+    dim3 grid((width + block.x - 1) / block.x,
+              (height + block.y - 1) / block.y);
+    
+    // Launch kernel
+    sobelKernel<<<grid, block>>>(d_src, d_dst, 
+                                  width, height, 
+                                  width, width);
+    
+    // Synchronize và copy kết quả về
+    cudaDeviceSynchronize();
+    cudaMemcpy(dstEdge.data, d_dst, bytes, 
+               cudaMemcpyDeviceToHost);
+    
+    // Free memory
+    cudaFree(d_src);
+    cudaFree(d_dst);
+    
+    return true;
+}
+\end{lstlisting}
+
+\subsubsection{Chiến thuật song song hóa CUDA}
+
+Chiến thuật song song hóa trong code hiện tại sử dụng \textbf{fine-grained parallelism} với các đặc điểm sau:
+
+\textbf{1. One-thread-per-pixel mapping:}
+\begin{itemize}
+    \item Mỗi thread GPU xử lý \textbf{chính xác 1 pixel} trong ảnh
+    \item Đây là mức độ song song hóa hạt mịn nhất (fine-grained)
+    \item Với ảnh 800x600 = 480,000 pixels → 480,000 threads được tạo ra
+    \item Tất cả threads chạy song song trên GPU
+\end{itemize}
+
+\textbf{2. 2D Thread-to-Pixel Mapping:}
+\begin{itemize}
+    \item Sử dụng \textbf{2D block} và \textbf{2D grid} để map trực tiếp với ảnh 2D
+    \item Thread ID được tính toán từ 2 chiều:
+    \begin{lstlisting}[language=C++]
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    \end{lstlisting}
+    \item \texttt{blockIdx.x/y}: Chỉ số block trong grid (theo chiều X và Y)
+    \item \texttt{blockDim.x/y}: Kích thước block (16x16)
+    \item \texttt{threadIdx.x/y}: Chỉ số thread trong block (0-15)
+    \item Kết quả: Mỗi thread biết chính xác pixel (x, y) mà nó phải xử lý
+\end{itemize}
+
+\textbf{3. Block Configuration:}
+\begin{itemize}
+    \item \textbf{Block size:} 16x16 = 256 threads per block
+    \begin{itemize}
+        \item Phù hợp với hầu hết GPU hiện đại
+        \item Đạt occupancy tốt (số thread active / số thread tối đa)
+        \item Cân bằng giữa parallelism và resource usage
+        \item 256 threads = 8 warps (mỗi warp = 32 threads)
+    \end{itemize}
+    
+    \item \textbf{Grid size:} Tính toán để bao phủ toàn bộ ảnh
+    \begin{lstlisting}[language=C++]
+    dim3 block(16, 16);  // 256 threads per block
+    dim3 grid((width + block.x - 1) / block.x,
+              (height + block.y - 1) / block.y);
+    \end{lstlisting}
+    \begin{itemize}
+        \item Sử dụng công thức: $\lceil size / block\_size \rceil$ (ceiling division)
+        \item Ví dụ: Ảnh 800x600 → Grid = (50, 38) blocks
+        \item Tổng số blocks: 50 × 38 = 1,900 blocks
+        \item Tổng số threads: 1,900 × 256 = 486,400 threads
+        \item Đảm bảo tất cả pixels đều được xử lý (có thể dư một số threads)
+    \end{itemize}
+\end{itemize}
+
+\textbf{4. Boundary Checking:}
+\begin{itemize}
+    \item Các threads ở biên ảnh hoặc ngoài phạm vi sẽ tự động return:
+    \begin{lstlisting}[language=C++]
+    if (x <= 0 || y <= 0 || x >= width - 1 || y >= height - 1) {
+        return;  // Thread không làm gì, kết quả = 0
+    }
+    \end{lstlisting}
+    \item Lý do: Sobel kernel 3x3 cần các pixel lân cận, không thể tính cho pixel ở biên
+    \item Các threads này vẫn được launch nhưng return ngay lập tức (overhead nhỏ)
+    \item Output đã được khởi tạo = 0, nên pixel biên sẽ giữ nguyên giá trị 0
+\end{itemize}
+
+\textbf{5. Memory Access Pattern:}
+\begin{itemize}
+    \item Mỗi thread truy cập:
+    \begin{itemize}
+        \item \textbf{9 pixels từ input:} 3x3 neighborhood (p00, p01, p02, p10, p11, p12, p20, p21, p22)
+        \item \textbf{1 pixel vào output:} Ghi kết quả magnitude
+        \item Tổng cộng: \textbf{10 memory accesses per thread}
+    \end{itemize}
+    
+    \item \textbf{Memory coalescing:}
+    \begin{itemize}
+        \item Các threads trong cùng một warp (32 threads) có thể truy cập memory liên tiếp
+        \item GPU có thể hợp nhất (coalesce) các memory requests thành một transaction lớn
+        \item Tuy nhiên, trong Sobel kernel:
+        \begin{itemize}
+            \item Mỗi thread cần 3 dòng khác nhau (y-1, y, y+1)
+            \item Các threads trong cùng warp có thể ở các dòng khác nhau
+            \item Memory access không hoàn toàn coalesced
+            \item Vẫn hiệu quả vì GPU có cache và memory bandwidth cao
+        \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Global memory access:}
+    \begin{itemize}
+        \item Code hiện tại truy cập trực tiếp global memory
+        \item Không sử dụng shared memory (có thể cải thiện trong tương lai)
+        \item Mỗi thread load 9 pixels độc lập từ global memory
+    \end{itemize}
+\end{itemize}
+
+\textbf{6. Execution Flow:}
+\begin{enumerate}
+    \item \textbf{Launch:} CPU launch kernel với grid và block configuration
+    \item \textbf{Distribution:} GPU scheduler phân phối các blocks cho các SMs (Streaming Multiprocessors)
+    \item \textbf{Execution:} Mỗi SM chạy nhiều warps song song
+    \item \textbf{Parallelism:} Hàng nghìn threads chạy đồng thời trên GPU
+    \item \textbf{Completion:} Tất cả threads hoàn thành, GPU báo hiệu CPU
+\end{enumerate}
+
+\textbf{7. Ưu điểm của chiến thuật này:}
+\begin{itemize}
+    \item \textbf{Đơn giản:} Code dễ hiểu, dễ maintain
+    \item \textbf{Hiệu quả:} Tận dụng tối đa số lượng threads của GPU
+    \item \textbf{Scalable:} Tự động scale với kích thước ảnh
+    \item \textbf{Load balancing:} GPU scheduler tự động cân bằng tải giữa các SMs
+\end{itemize}
+
+\textbf{8. Hạn chế và cơ hội cải thiện:}
+\begin{itemize}
+    \item \textbf{Không dùng shared memory:} Có thể cache các dòng ảnh được dùng nhiều lần
+    \item \textbf{Memory access chưa tối ưu:} Có thể cải thiện bằng shared memory để giảm global memory access
+    \item \textbf{Boundary threads:} Một số threads không làm việc (overhead nhỏ)
+    \item \textbf{Có thể tối ưu thêm:} Sử dụng texture memory hoặc constant memory cho một số trường hợp
+\end{itemize}
+
+\subsection{So sánh các phương pháp}
+
+\subsubsection{Performance comparison}
+
+Dựa trên benchmark với ảnh 800x600 pixels (0.48 MP):
+
+\begin{table}[H]
+\centering
+\caption{So sánh chi tiết các phương pháp song song hóa}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Phương pháp} & \textbf{Thời gian} & \textbf{Speedup} & \textbf{FPS} & \textbf{Parallelism} \\
+\hline
+CPU Scalar & 7.144 ms & 1.0x & 140.0 & 1 thread \\
+\hline
+CPU OpenMP & ~7.144 ms & ~1.0x & ~140.0 & Multi-thread \\
+\hline
+CPU SIMD & 1.885 ms & 3.79x & 530.4 & SIMD + OpenMP \\
+\hline
+GPU CUDA & 0.494 ms & 14.47x & 2025.5 & Thousands threads \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Phân tích chi tiết}
+
+\textbf{CPU Scalar vs SIMD:}
+\begin{itemize}
+    \item SIMD nhanh hơn 3.79x nhờ xử lý 8 pixels cùng lúc
+    \item Overhead của SIMD intrinsics là tối thiểu
+    \item Kết hợp với OpenMP cho parallelism theo dòng
+\end{itemize}
+
+\textbf{SIMD vs CUDA:}
+\begin{itemize}
+    \item CUDA nhanh hơn SIMD 3.82x
+    \item GPU có hàng nghìn lõi vs CPU có vài lõi
+    \item CUDA có overhead memory transfer nhưng vẫn nhanh hơn nhiều
+\end{itemize}
+
+\textbf{Khi nào dùng SIMD, khi nào dùng CUDA:}
+\begin{itemize}
+    \item \textbf{SIMD:} Khi không có GPU, hoặc overhead transfer lớn hơn lợi ích
+    \item \textbf{CUDA:} Khi có GPU và cần tốc độ tối đa, xử lý batch lớn
+\end{itemize}
 
 \section{Tích hợp Sobel vào pipeline AI}
 
@@ -435,6 +981,309 @@ Model được huấn luyện với:
 \end{itemize}
 
 \section{Luồng xử lý tổng thể}
+
+\subsection{Chiến thuật Task Parallelism}
+
+Đề tài sử dụng \textbf{Pipeline Parallelism} (hay còn gọi là Task Parallelism) để song song hóa các giai đoạn xử lý khác nhau của pipeline. Đây là chiến thuật song song hóa ở mức độ cao, trong đó các task khác nhau được thực hiện đồng thời trên các thread riêng biệt.
+
+\subsubsection{Kiến trúc Pipeline với 5 Threads}
+
+Hệ thống được thiết kế với \textbf{5 threads độc lập}, mỗi thread chịu trách nhiệm một giai đoạn xử lý cụ thể:
+
+\begin{enumerate}
+    \item \textbf{Thread 1 - Capture:} Đọc frame từ camera/file và đưa vào queue
+    \item \textbf{Thread 2 - Sobel:} Áp dụng bộ lọc Sobel với tối ưu song song
+    \item \textbf{Thread 3 - Detection:} Chạy model YOLOv5 để phát hiện biển số
+    \item \textbf{Thread 4 - OCR:} Nhận dạng ký tự từ các vùng biển số đã phát hiện
+    \item \textbf{Thread 5 - Render:} Vẽ kết quả và hiển thị lên màn hình
+\end{enumerate}
+
+\subsubsection{Thread-Safe Queue (TSQueue)}
+
+Để truyền dữ liệu giữa các threads một cách an toàn, hệ thống sử dụng \textbf{Thread-Safe Queue} (TSQueue):
+
+\textbf{Cấu trúc TSQueue:}
+\begin{lstlisting}[language=C++]
+template<typename T>
+class TSQueue {
+    std::mutex mutex_;                    // Mutex để đồng bộ
+    std::condition_variable cond_;        // Condition variable
+    std::queue<T> queue_;                 // Queue chứa dữ liệu
+    size_t maxSize_;                      // Kích thước tối đa (5 frames)
+    
+    void push(const T& value);            // Thêm vào queue
+    bool pop(T& out);                     // Lấy ra khỏi queue
+    bool empty() const;                   // Kiểm tra rỗng
+};
+\end{lstlisting}
+
+\textbf{Đặc điểm:}
+\begin{itemize}
+    \item \textbf{Thread-safe:} Sử dụng mutex và condition variable để đảm bảo an toàn khi nhiều threads truy cập
+    \item \textbf{Bounded buffer:} Giới hạn tối đa 5 frames trong mỗi queue để tránh tràn bộ nhớ
+    \item \textbf{Blocking push:} Nếu queue đầy, thread sẽ đợi cho đến khi có chỗ trống
+    \item \textbf{Non-blocking pop:} Nếu queue rỗng, thread sẽ return false và tiếp tục vòng lặp
+\end{itemize}
+
+\textbf{5 Queues trong hệ thống:}
+\begin{itemize}
+    \item \texttt{qCapture\_}: Capture → Sobel (buffer 5 frames)
+    \item \texttt{qSobel\_}: Sobel → Detection (buffer 5 frames)
+    \item \texttt{qDetect\_}: Detection → OCR (buffer 5 frames)
+    \item \texttt{qOCR\_}: OCR → Render (buffer 5 frames)
+    \item \texttt{qRender\_}: Render (buffer 5 frames)
+\end{itemize}
+
+\subsubsection{Chi tiết từng Thread}
+
+\textbf{1. Capture Thread (\texttt{captureLoop}):}
+\begin{itemize}
+    \item \textbf{Nhiệm vụ:} Đọc frame từ camera hoặc file ảnh/video
+    \item \textbf{Input:} Camera stream hoặc file path
+    \item \textbf{Output:} FramePacket chứa frame gốc, đẩy vào \texttt{qCapture\_}
+    \item \textbf{Đặc điểm:}
+    \begin{itemize}
+        \item Hỗ trợ cả camera (V4L2) và file ảnh/video
+        \item Tự động xử lý lỗi khi không đọc được frame
+        \item Đếm số frame để tracking
+    \end{itemize}
+\end{itemize}
+
+\textbf{2. Sobel Thread (\texttt{sobelLoop}):}
+\begin{itemize}
+    \item \textbf{Nhiệm vụ:} Áp dụng bộ lọc Sobel với tối ưu song song (CUDA/SIMD/CPU)
+    \item \textbf{Input:} FramePacket từ \texttt{qCapture\_}
+    \item \textbf{Output:} FramePacket với ảnh Sobel, đẩy vào \texttt{qSobel\_}
+    \item \textbf{Đặc điểm:}
+    \begin{itemize}
+        \item Tự động chuyển đổi sang grayscale nếu cần
+        \item Sử dụng cơ chế fallback: CUDA → SIMD → CPU scalar
+        \item Xử lý độc lập, không block các thread khác
+    \end{itemize}
+\end{itemize}
+
+\textbf{3. Detection Thread (\texttt{detectLoop}):}
+\begin{itemize}
+    \item \textbf{Nhiệm vụ:} Chạy YOLOv5 model để phát hiện vùng biển số
+    \item \textbf{Input:} FramePacket từ \texttt{qSobel\_} (chứa frame gốc)
+    \item \textbf{Output:} FramePacket với danh sách bounding boxes, đẩy vào \texttt{qDetect\_}
+    \item \textbf{Đặc điểm:}
+    \begin{itemize}
+        \item Chỉ làm detection, không làm OCR (tách riêng để song song hóa)
+        \item Sử dụng ONNX Runtime để inference
+        \item Trả về vector các cv::Rect chứa vùng biển số
+    \end{itemize}
+    \item \textbf{Lợi ích tách riêng:} Detection và OCR có thể chạy song song trên các frame khác nhau
+\end{itemize}
+
+\textbf{4. OCR Thread (\texttt{ocrLoop}):}
+\begin{itemize}
+    \item \textbf{Nhiệm vụ:} Nhận dạng ký tự từ các vùng biển số đã phát hiện
+    \item \textbf{Input:} FramePacket từ \texttt{qDetect\_} (chứa frame + bounding boxes)
+    \item \textbf{Output:} FramePacket với text biển số, đẩy vào \texttt{qRender\_}
+    \item \textbf{Đặc điểm:}
+    \begin{itemize}
+        \item Xử lý nhiều ROI song song nếu có nhiều biển số (Data Parallelism)
+        \item Sử dụng OpenMP để song song hóa các ROI:
+        \begin{lstlisting}[language=C++]
+        #pragma omp parallel for
+        for (size_t i = 0; i < pkt.plates.size(); ++i) {
+            cv::Mat plateRoi = pkt.frame(pkt.plates[i]).clone();
+            ocrResults[i] = ocr_.recognize(plateRoi);
+        }
+        \end{lstlisting}
+        \item Ghép kết quả từ nhiều biển số (lấy biển số đầu tiên có text)
+    \end{itemize}
+    \item \textbf{Kết hợp Task + Data Parallelism:} Thread riêng (Task) + OpenMP cho nhiều ROI (Data)
+\end{itemize}
+
+\textbf{5. Render Thread (\texttt{renderLoop}):}
+\begin{itemize}
+    \item \textbf{Nhiệm vụ:} Vẽ kết quả lên frame và hiển thị
+    \item \textbf{Input:} FramePacket từ \texttt{qOCR\_} (chứa frame + boxes + text)
+    \item \textbf{Output:} Hiển thị lên cửa sổ OpenCV
+    \item \textbf{Đặc điểm:}
+    \begin{itemize}
+        \item Vẽ bounding boxes màu xanh cho các biển số phát hiện được
+        \item Hiển thị text biển số trên frame
+        \item Hiển thị FPS và thông tin frame
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Pipeline Overlap và Throughput}
+
+\textbf{Khái niệm Pipeline Overlap:}
+\begin{itemize}
+    \item Các frame khác nhau được xử lý ở các giai đoạn khác nhau \textbf{cùng lúc}
+    \item Ví dụ: Frame N đang ở Detection, Frame N+1 đang ở Sobel, Frame N+2 đang ở Capture
+    \item Điều này tăng \textbf{throughput} (số frame xử lý được mỗi giây)
+\end{itemize}
+
+\textbf{Ví dụ minh họa:}
+\begin{verbatim}
+Thời điểm T0:
+  Capture:  Frame 0
+  Sobel:    (rỗng)
+  Detect:   (rỗng)
+  OCR:      (rỗng)
+  Render:   (rỗng)
+
+Thời điểm T1:
+  Capture:  Frame 1
+  Sobel:    Frame 0
+  Detect:   (rỗng)
+  OCR:      (rỗng)
+  Render:   (rỗng)
+
+Thời điểm T2:
+  Capture:  Frame 2
+  Sobel:    Frame 1
+  Detect:   Frame 0
+  OCR:      (rỗng)
+  Render:   (rỗng)
+
+Thời điểm T3:
+  Capture:  Frame 3
+  Sobel:    Frame 2
+  Detect:   Frame 1
+  OCR:      Frame 0
+  Render:   (rỗng)
+
+Thời điểm T4:
+  Capture:  Frame 4
+  Sobel:    Frame 3
+  Detect:   Frame 2
+  OCR:      Frame 1
+  Render:   Frame 0
+\end{verbatim}
+
+\textbf{Lợi ích:}
+\begin{itemize}
+    \item \textbf{Tăng throughput:} Nhiều frame được xử lý đồng thời
+    \item \textbf{Tận dụng tài nguyên:} CPU/GPU được sử dụng liên tục, không idle
+    \item \textbf{Giảm latency tổng thể:} Mặc dù latency của một frame không đổi, nhưng latency trung bình giảm do pipeline overlap
+\end{itemize}
+
+\subsubsection{Tách Detection và OCR thành 2 Threads riêng}
+
+\textbf{Lý do tách riêng:}
+\begin{itemize}
+    \item \textbf{Độc lập về dữ liệu:} Detection và OCR có thể chạy trên các frame khác nhau
+    \item \textbf{Tận dụng CPU tốt hơn:} Nếu có nhiều cores, Detection và OCR có thể chạy song song
+    \item \textbf{Giảm blocking:} OCR không phải đợi Detection hoàn thành frame hiện tại
+\end{itemize}
+
+\textbf{So sánh trước và sau:}
+
+\textbf{Trước (Detection + OCR cùng thread):}
+\begin{verbatim}
+Thread 1: Capture
+Thread 2: Sobel
+Thread 3: Detect + OCR (tuần tự)  ← Chậm
+Thread 4: Render
+\end{verbatim}
+\begin{itemize}
+    \item OCR phải đợi Detection xong mới bắt đầu
+    \item Nếu Detection mất 50ms và OCR mất 30ms → Tổng 80ms cho 1 frame
+\end{itemize}
+
+\textbf{Sau (Detection và OCR tách riêng):}
+\begin{verbatim}
+Thread 1: Capture
+Thread 2: Sobel
+Thread 3: Detection (chỉ detect)   ← Độc lập
+Thread 4: OCR (chỉ OCR)            ← Độc lập
+Thread 5: Render
+\end{verbatim}
+\begin{itemize}
+    \item Detection và OCR chạy song song trên các frame khác nhau
+    \item Pipeline có thể xử lý nhiều frame cùng lúc
+    \item Throughput tăng đáng kể
+\end{itemize}
+
+\subsubsection{Điều kiện dừng và Synchronization}
+
+\textbf{Điều kiện dừng:}
+\begin{itemize}
+    \item Mỗi thread chạy trong vòng lặp \texttt{while} với điều kiện:
+    \begin{lstlisting}[language=C++]
+    while (running_.load() || !qInput_.empty()) {
+        // Xử lý frame
+    }
+    \end{lstlisting}
+    \item Thread sẽ dừng khi:
+    \begin{itemize}
+        \item \texttt{running\_} = false (người dùng dừng)
+        \item VÀ queue input rỗng (đã xử lý hết frame)
+    \end{itemize}
+    \item Đảm bảo tất cả frame được xử lý trước khi dừng
+\end{itemize}
+
+\textbf{Synchronization:}
+\begin{itemize}
+    \item Sử dụng \texttt{std::atomic<bool>} cho flag \texttt{running\_}
+    \item TSQueue tự động đồng bộ bằng mutex và condition variable
+    \item \texttt{join()} để đợi tất cả threads hoàn thành
+\end{itemize}
+
+\subsubsection{Ưu điểm của Task Parallelism}
+
+\textbf{1. Tăng Throughput:}
+\begin{itemize}
+    \item Nhiều frame được xử lý đồng thời ở các giai đoạn khác nhau
+    \item Tận dụng tối đa tài nguyên CPU/GPU
+    \item Có thể đạt throughput cao hơn nhiều so với sequential processing
+\end{itemize}
+
+\textbf{2. Giảm Latency:}
+\begin{itemize}
+    \item Mặc dù latency của một frame không đổi, nhưng latency trung bình giảm
+    \item Frame mới không phải đợi frame cũ hoàn thành hoàn toàn
+    \item Pipeline overlap giúp giảm thời gian chờ đợi
+\end{itemize}
+
+\textbf{3. Scalability:}
+\begin{itemize}
+    \item Dễ dàng thêm/bớt các giai đoạn xử lý
+    \item Mỗi giai đoạn độc lập, có thể tối ưu riêng
+    \item Có thể mở rộng với nhiều threads hơn nếu cần
+\end{itemize}
+
+\textbf{4. Resource Utilization:}
+\begin{itemize}
+    \item CPU cores được sử dụng hiệu quả
+    \item GPU có thể được sử dụng cho Sobel và Detection cùng lúc (nếu có)
+    \item Tránh idle time giữa các giai đoạn
+\end{itemize}
+
+\subsubsection{Hạn chế và Trade-offs}
+
+\textbf{1. Memory Overhead:}
+\begin{itemize}
+    \item Cần lưu trữ nhiều frame trong pipeline (tối đa 5 frames × 5 queues = 25 frames)
+    \item Mỗi frame có thể lớn (ví dụ: 1920×1080×3 bytes = 6MB)
+    \item Tổng memory: 25 × 6MB = 150MB chỉ cho buffers
+\end{itemize}
+
+\textbf{2. Complexity:}
+\begin{itemize}
+    \item Code phức tạp hơn so với sequential processing
+    \item Cần quản lý threads, queues, synchronization
+    \item Khó debug hơn do nhiều threads chạy đồng thời
+\end{itemize}
+
+\textbf{3. Latency của một frame:}
+\begin{itemize}
+    \item Latency của một frame cụ thể không giảm (vẫn phải đi qua tất cả các giai đoạn)
+    \item Chỉ có latency trung bình giảm nhờ pipeline overlap
+\end{itemize}
+
+\textbf{4. Synchronization Overhead:}
+\begin{itemize}
+    \item Mutex và condition variable có overhead
+    \item Queue operations có thể block threads
+    \item Tuy nhiên, overhead này nhỏ so với lợi ích
+\end{itemize}
 
 \subsection{Sơ đồ khối hệ thống}
 
