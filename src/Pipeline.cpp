@@ -1,6 +1,12 @@
 #include "Pipeline.h"
+#ifdef USE_CUDA_SOBEL
+#include "SobelCuda.h"
+#endif
 
 #include <iostream>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
 Pipeline::Pipeline() = default;
 
@@ -40,10 +46,203 @@ bool Pipeline::initialize(const std::string& source,
         cap_.set(cv::CAP_PROP_FPS, 30);
         std::cout << "[Pipeline] Camera da mo thanh cong (V4L2)." << std::endl;
     } else if (!isImageFile) {
-        // Mở file video (không phải ảnh)
-        if (!cap_.open(source)) {
-            std::cerr << "Khong the mo video: " << source << std::endl;
-            return false;
+        // Mở file video hoặc RTSP stream
+        // Kiểm tra xem có phải RTSP stream không
+        bool isRTSP = (source.find("rtsp://") == 0);
+        
+        if (isRTSP) {
+            // RTSP stream: dùng GStreamer pipeline để xử lý authentication tốt hơn
+            std::cout << "[Pipeline] Dang ket noi RTSP stream: " << source << std::endl;
+            
+            bool opened = false;
+            
+            // Thử với GStreamer pipeline trước (xử lý authentication tốt hơn)
+            // Parse username và password từ URL
+            std::string username, password, rtspUrl;
+            size_t userPos = source.find("://");
+            size_t atPos = source.find('@');
+            if (userPos != std::string::npos && atPos != std::string::npos) {
+                std::string authPart = source.substr(userPos + 3, atPos - userPos - 3);
+                size_t colonPos = authPart.find(':');
+                if (colonPos != std::string::npos) {
+                    username = authPart.substr(0, colonPos);
+                    password = authPart.substr(colonPos + 1);
+                    rtspUrl = "rtsp://" + source.substr(atPos + 1);
+                }
+            }
+            
+            // GStreamer pipeline với user-id và user-pw
+            std::string gstPipeline;
+            if (!username.empty() && !password.empty()) {
+                gstPipeline = "rtspsrc location=" + rtspUrl + 
+                    " user-id=" + username + " user-pw=" + password +
+                    " latency=0 ! decodebin ! videoconvert ! appsink";
+            } else {
+                gstPipeline = "rtspsrc location=" + source + 
+                    " latency=0 ! decodebin ! videoconvert ! appsink";
+            }
+            
+            std::cout << "[Pipeline] Thu GStreamer pipeline..." << std::endl;
+            if (cap_.open(gstPipeline, cv::CAP_GSTREAMER)) {
+                opened = true;
+                std::cout << "[Pipeline] Ket noi RTSP thanh cong voi GStreamer pipeline." << std::endl;
+            } else {
+                // Thử với FFmpeg backend
+                std::cout << "[Pipeline] GStreamer that bai, thu FFmpeg backend..." << std::endl;
+                if (cap_.open(source, cv::CAP_FFMPEG)) {
+                    opened = true;
+                    std::cout << "[Pipeline] Ket noi RTSP thanh cong voi FFmpeg backend." << std::endl;
+                } else {
+                    // Thử các format URL RTSP phổ biến khác
+                    std::vector<std::string> rtspVariants;
+                    
+                    // Tách base URL
+                    size_t atPos = source.find('@');
+                    if (atPos != std::string::npos) {
+                        std::string base = source.substr(atPos + 1);  // ip:port
+                        std::string auth = source.substr(0, atPos + 1);  // rtsp://user:pass@
+                        
+                        // Các format phổ biến
+                        rtspVariants.push_back(auth + base + "/stream1");
+                        rtspVariants.push_back(auth + base + "/cam/realmonitor");
+                        rtspVariants.push_back(auth + base + "/h264");
+                        rtspVariants.push_back(auth + base + "/live");
+                    }
+                    
+                    // Thử từng variant với GStreamer
+                    for (const auto& variant : rtspVariants) {
+                        std::cout << "[Pipeline] Thu format khac voi GStreamer: " << variant << std::endl;
+                        // Parse variant URL
+                        std::string varUsername, varPassword, varRtspUrl;
+                        size_t varUserPos = variant.find("://");
+                        size_t varAtPos = variant.find('@');
+                        if (varUserPos != std::string::npos && varAtPos != std::string::npos) {
+                            std::string varAuthPart = variant.substr(varUserPos + 3, varAtPos - varUserPos - 3);
+                            size_t varColonPos = varAuthPart.find(':');
+                            if (varColonPos != std::string::npos) {
+                                varUsername = varAuthPart.substr(0, varColonPos);
+                                varPassword = varAuthPart.substr(varColonPos + 1);
+                                varRtspUrl = "rtsp://" + variant.substr(varAtPos + 1);
+                            }
+                        }
+                        
+                        std::string gstVariant;
+                        if (!varUsername.empty() && !varPassword.empty()) {
+                            gstVariant = "rtspsrc location=" + varRtspUrl + 
+                                " user-id=" + varUsername + " user-pw=" + varPassword +
+                                " latency=0 ! decodebin ! videoconvert ! appsink";
+                        } else {
+                            gstVariant = "rtspsrc location=" + variant + 
+                                " latency=0 ! decodebin ! videoconvert ! appsink";
+                        }
+                        
+                        if (cap_.open(gstVariant, cv::CAP_GSTREAMER)) {
+                            opened = true;
+                            std::cout << "[Pipeline] Ket noi RTSP thanh cong voi format: " << variant << std::endl;
+                            break;
+                        }
+                    }
+                    
+                    // Fallback: thử với backend mặc định
+                    if (!opened) {
+                        std::cout << "[Pipeline] Thu backend mac dinh..." << std::endl;
+                        if (cap_.open(source)) {
+                            opened = true;
+                        }
+                    }
+                }
+            }
+            
+            if (!opened) {
+                std::cerr << "Khong the mo RTSP stream: " << source << std::endl;
+                std::cerr << "Kiem tra:" << std::endl;
+                std::cerr << "  - Username/password co dung khong?" << std::endl;
+                std::cerr << "  - Camera co dang chay khong? (test voi: ffplay " << source << ")" << std::endl;
+                std::cerr << "  - URL RTSP co dung format khong?" << std::endl;
+                std::cerr << "  - Co the thu cac format:" << std::endl;
+                std::cerr << "    * " << source << "/stream1" << std::endl;
+                std::cerr << "    * " << source << "/cam/realmonitor" << std::endl;
+                std::cerr << "    * " << source << "/h264" << std::endl;
+                return false;
+            }
+            
+            // Đặt các thuộc tính cho RTSP stream
+            cap_.set(cv::CAP_PROP_BUFFERSIZE, 1);  // Giảm buffer để giảm latency
+            std::cout << "[Pipeline] RTSP stream da ket noi thanh cong." << std::endl;
+        } else {
+            // File video thông thường, HTTP stream, UDP stream, hoặc named pipe
+            bool isHTTP = (source.find("http://") == 0 || source.find("https://") == 0);
+            bool isUDP = (source.find("udp://") == 0);
+            bool isPipe = (source.find("/tmp/rtsp_fifo") == 0 || source.find("/tmp/") == 0);
+            
+            if (isUDP) {
+                // UDP stream từ VLC bridge: thử nhiều format
+                std::cout << "[Pipeline] Doc UDP stream: " << source << std::endl;
+                std::cout << "[Pipeline] Dang cho UDP stream san sang (co the mat 5-10 giay)..." << std::endl;
+                
+                // Đợi một chút để VLC bắt đầu stream
+                std::this_thread::sleep_for(std::chrono::seconds(3));
+                
+                // Thử 1: FFmpeg backend với format mặc định
+                if (cap_.open(source, cv::CAP_FFMPEG)) {
+                    std::cout << "[Pipeline] UDP stream da ket noi thanh cong voi FFmpeg." << std::endl;
+                } else {
+                    // Thử 2: Format với buffer size
+                    std::string udpWithBuffer = source + "?buffer_size=65536";
+                    if (cap_.open(udpWithBuffer, cv::CAP_FFMPEG)) {
+                        std::cout << "[Pipeline] UDP stream da ket noi thanh cong voi buffer." << std::endl;
+                    } else {
+                        // Thử 3: GStreamer pipeline
+                        std::string gstPipeline = "udpsrc port=" + source.substr(source.find_last_of(':') + 1) + 
+                            " ! application/x-rtp,encoding-name=H264,payload=96 ! rtph264depay ! decodebin ! videoconvert ! appsink";
+                        std::cout << "[Pipeline] Thu GStreamer pipeline cho UDP stream..." << std::endl;
+                        if (cap_.open(gstPipeline, cv::CAP_GSTREAMER)) {
+                            std::cout << "[Pipeline] UDP stream da ket noi thanh cong voi GStreamer." << std::endl;
+                        } else {
+                            std::cerr << "Khong the mo UDP stream: " << source << std::endl;
+                            std::cerr << "Kiem tra VLC bridge co dang chay khong?" << std::endl;
+                            return false;
+                        }
+                    }
+                }
+            } else if (isHTTP) {
+                // HTTP stream từ VLC bridge: thử nhiều cách
+                std::cout << "[Pipeline] Doc HTTP stream: " << source << std::endl;
+                
+                // Thử 1: FFmpeg backend
+                if (cap_.open(source, cv::CAP_FFMPEG)) {
+                    std::cout << "[Pipeline] HTTP stream da ket noi thanh cong voi FFmpeg." << std::endl;
+                } else {
+                    // Thử 2: GStreamer pipeline với decodebin (tự động detect codec)
+                    std::string gstPipeline = "souphttpsrc location=" + source + 
+                        " ! decodebin ! videoconvert ! appsink";
+                    std::cout << "[Pipeline] Thu GStreamer pipeline cho HTTP stream..." << std::endl;
+                    if (cap_.open(gstPipeline, cv::CAP_GSTREAMER)) {
+                        std::cout << "[Pipeline] HTTP stream da ket noi thanh cong voi GStreamer." << std::endl;
+                    } else {
+                        std::cerr << "Khong the mo HTTP stream: " << source << std::endl;
+                        std::cerr << "Kiem tra VLC bridge co dang chay khong?" << std::endl;
+                        std::cerr << "  ps aux | grep vlc" << std::endl;
+                        std::cerr << "  netstat -tlnp | grep 8080" << std::endl;
+                        return false;
+                    }
+                }
+            } else if (isPipe) {
+                std::cout << "[Pipeline] Doc tu named pipe (ffmpeg bridge): " << source << std::endl;
+                // Đọc raw video từ pipe (format: rawvideo, bgr24)
+                // Cần biết resolution trước, tạm thời dùng 1920x1080
+                // Hoặc có thể đọc header từ pipe
+                if (!cap_.open(source)) {
+                    std::cerr << "Khong the mo named pipe: " << source << std::endl;
+                    return false;
+                }
+            } else {
+                // File video thông thường
+                if (!cap_.open(source)) {
+                    std::cerr << "Khong the mo video: " << source << std::endl;
+                    return false;
+                }
+            }
         }
     } else {
         // Là file ảnh, không cần mở VideoCapture
@@ -51,13 +250,13 @@ bool Pipeline::initialize(const std::string& source,
         std::cout << "[Pipeline] Source la file anh: " << source << std::endl;
     }
 
-    // GPU: dùng CUDA Sobel nếu được build với hỗ trợ CUDA (macro USE_CUDA_SOBEL)
+    // Data Parallelism: Chỉ dùng CUDA (bắt buộc)
     #ifdef USE_CUDA_SOBEL
     useGPU_ = true;
-    std::cout << "[Pipeline] CUDA support: ENABLED" << std::endl;
+    std::cout << "[Pipeline] Data Parallelism: CUDA (GPU)" << std::endl;
     #else
-    useGPU_ = false;
-    std::cout << "[Pipeline] CUDA support: DISABLED (using SIMD + OpenMP)" << std::endl;
+    std::cerr << "[Pipeline] ERROR: USE_CUDA_SOBEL must be defined. Build with CUDA support." << std::endl;
+    return false;
     #endif
 
     // Khởi tạo models
@@ -177,18 +376,21 @@ void Pipeline::sobelLoop() {
             gray = pkt.frame;
         }
 
-        // Data Parallelism: Thử CUDA -> SIMD -> CPU OpenMP
-        bool processed = false;
+        // Data Parallelism: Chỉ dùng CUDA (bắt buộc)
+        auto sobelStart = std::chrono::high_resolution_clock::now();
         
         #ifdef USE_CUDA_SOBEL
-        if (useGPU_ && sobelCuda(gray, pkt.sobel)) {
-            processed = true;
+        if (!sobelCuda(gray, pkt.sobel)) {
+            std::cerr << "[Sobel] CUDA Sobel failed for frame " << pkt.frameId << std::endl;
+            continue;  // Bỏ qua frame nếu CUDA lỗi
         }
+        #else
+        #error "USE_CUDA_SOBEL must be defined. Build with CUDA support."
         #endif
         
-        if (!processed && !sobelSIMD(gray, pkt.sobel)) {
-            sobelCPU(gray, pkt.sobel);
-        }
+        auto sobelEnd = std::chrono::high_resolution_clock::now();
+        auto sobelTime = std::chrono::duration_cast<std::chrono::microseconds>(sobelEnd - sobelStart).count();
+        pkt.sobelTimeMs = sobelTime / 1000.0;
 
         qSobel_.push(pkt);
     }
@@ -204,7 +406,11 @@ void Pipeline::detectLoop() {
         }
 
         // Chỉ làm detection ở đây
+        auto detectStart = std::chrono::high_resolution_clock::now();
         pkt.plates = detector_.detect(pkt.frame);
+        auto detectEnd = std::chrono::high_resolution_clock::now();
+        auto detectTime = std::chrono::duration_cast<std::chrono::microseconds>(detectEnd - detectStart).count();
+        pkt.detectTimeMs = detectTime / 1000.0;
 
         // Đẩy vào queue OCR (có thể có nhiều biển số)
         qDetect_.push(pkt);
@@ -220,6 +426,7 @@ void Pipeline::ocrLoop() {
         }
 
         // Data Parallelism: Xử lý nhiều ROI song song (nếu có nhiều biển số)
+        auto ocrStart = std::chrono::high_resolution_clock::now();
         if (!pkt.plates.empty()) {
             std::vector<std::string> ocrResults(pkt.plates.size());
             
@@ -240,17 +447,37 @@ void Pipeline::ocrLoop() {
                 }
             }
         }
+        auto ocrEnd = std::chrono::high_resolution_clock::now();
+        auto ocrTime = std::chrono::duration_cast<std::chrono::microseconds>(ocrEnd - ocrStart).count();
+        pkt.ocrTimeMs = ocrTime / 1000.0;
 
         qRender_.push(pkt);
     }
 }
 
 void Pipeline::renderLoop() {
+    // Khởi tạo FPS tracking
+    auto lastFpsTime = std::chrono::high_resolution_clock::now();
+    int fpsFrameCount = 0;
+    double currentFps = 0.0;
+    const double fpsUpdateInterval = 1.0; // Cập nhật FPS mỗi 1 giây
+    
     while (running_.load() || !qRender_.empty()) {
         FramePacket pkt;
         if (!qRender_.pop(pkt)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             continue;
+        }
+
+        // Tính FPS
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastFpsTime).count() / 1000.0;
+        fpsFrameCount++;
+        
+        if (elapsed >= fpsUpdateInterval) {
+            currentFps = fpsFrameCount / elapsed;
+            fpsFrameCount = 0;
+            lastFpsTime = currentTime;
         }
 
         cv::Mat display = pkt.frame.clone();
@@ -260,13 +487,43 @@ void Pipeline::renderLoop() {
             cv::rectangle(display, r, cv::Scalar(0, 255, 0), 2);
         }
 
-        // Vẽ text biển số
+        // Hiển thị FPS và profiling info (góc trên bên phải)
+        std::stringstream fpsText;
+        fpsText << "FPS: " << std::fixed << std::setprecision(1) << currentFps;
+        cv::putText(display, fpsText.str(), cv::Point(display.cols - 200, 30),
+                    cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 255), 2);
+        
+        // Hiển thị thời gian từng stage (nếu có)
+        int yOffset = 60;
+        if (pkt.sobelTimeMs > 0) {
+            std::stringstream sobelText;
+            sobelText << "Sobel(CUDA): " << std::fixed << std::setprecision(2) << pkt.sobelTimeMs << "ms";
+            cv::putText(display, sobelText.str(), cv::Point(display.cols - 250, yOffset),
+                        cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 255), 1);
+            yOffset += 25;
+        }
+        if (pkt.detectTimeMs > 0) {
+            std::stringstream detectText;
+            detectText << "Detect(CPU): " << std::fixed << std::setprecision(2) << pkt.detectTimeMs << "ms";
+            cv::putText(display, detectText.str(), cv::Point(display.cols - 250, yOffset),
+                        cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 255), 1);
+            yOffset += 25;
+        }
+        if (pkt.ocrTimeMs > 0) {
+            std::stringstream ocrText;
+            ocrText << "OCR(CPU): " << std::fixed << std::setprecision(2) << pkt.ocrTimeMs << "ms";
+            cv::putText(display, ocrText.str(), cv::Point(display.cols - 250, yOffset),
+                        cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 255), 1);
+        }
+
+        // Vẽ text biển số (góc trên bên trái)
         if (!pkt.plateText.empty()) {
             cv::putText(display, pkt.plateText, cv::Point(10, 30),
                         cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
 
             // Ở đây: gửi MQTT một lần khi có biển số (bạn tự tích hợp)
-            std::cout << "[Frame " << pkt.frameId << "] Bien so: " << pkt.plateText << std::endl;
+            std::cout << "[Frame " << pkt.frameId << "] Bien so: " << pkt.plateText 
+                      << " | FPS: " << std::fixed << std::setprecision(1) << currentFps << std::endl;
         }
 
         cv::imshow(windowName_, display);
@@ -277,42 +534,6 @@ void Pipeline::renderLoop() {
     }
 }
 
-// ==================== Sobel GPU/CPU ====================
-
-void Pipeline::sobelGPU(const cv::Mat& src, cv::Mat& dst) {
-    // Tạm thời fallback về CPU (CUDA cần build riêng)
-    sobelCPU(src, dst);
-}
-
-void Pipeline::sobelCPU(const cv::Mat& src, cv::Mat& dst) {
-    CV_Assert(src.type() == CV_8UC1);
-    dst = cv::Mat::zeros(src.size(), CV_8UC1);
-
-    int rows = src.rows;
-    int cols = src.cols;
-
-    #pragma omp parallel for
-    for (int y = 1; y < rows - 1; ++y) {
-        for (int x = 1; x < cols - 1; ++x) {
-            int p00 = src.at<uchar>(y - 1, x - 1);
-            int p01 = src.at<uchar>(y - 1, x    );
-            int p02 = src.at<uchar>(y - 1, x + 1);
-            int p10 = src.at<uchar>(y    , x - 1);
-            int p11 = src.at<uchar>(y    , x    );
-            int p12 = src.at<uchar>(y    , x + 1);
-            int p20 = src.at<uchar>(y + 1, x - 1);
-            int p21 = src.at<uchar>(y + 1, x    );
-            int p22 = src.at<uchar>(y + 1, x + 1);
-
-            int gx = -p00 - 2*p10 - p20 + p02 + 2*p12 + p22;
-            int gy = -p00 - 2*p01 - p02 + p20 + 2*p21 + p22;
-
-            float mag = std::sqrt(static_cast<float>(gx * gx + gy * gy));
-            if (mag > 255.0f) mag = 255.0f;
-
-            dst.at<uchar>(y, x) = static_cast<uchar>(mag);
-        }
-    }
-}
+// Sobel filter chỉ dùng CUDA (xem SobelCuda.cu)
 
 

@@ -6,6 +6,7 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
 
 #include <opencv2/opencv.hpp>
 
@@ -21,6 +22,10 @@ struct FramePacket {
     std::vector<cv::Rect> plates;
     std::string plateText;
     int frameId = 0;
+    // Profiling times (ms)
+    double sobelTimeMs = 0.0;
+    double detectTimeMs = 0.0;
+    double ocrTimeMs = 0.0;
 };
 
 // Queue an toàn luồng (template đơn giản)
@@ -80,10 +85,7 @@ private:
     void ocrLoop();         // Tách riêng OCR (Task Parallelism)
     void renderLoop();
 
-    // Sobel GPU/CPU
-    // Hiện tại triển khai CPU-only; Sobel GPU có thể thêm lại khi OpenCV CUDA sẵn sàng.
-    void sobelGPU(const cv::Mat& src, cv::Mat& dst);
-    void sobelCPU(const cv::Mat& src, cv::Mat& dst);
+    // Sobel filter chỉ dùng CUDA (không có fallback)
 
 private:
     std::string source_;

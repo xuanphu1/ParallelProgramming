@@ -30,12 +30,22 @@ bool LPDetector::initialize(const std::string& modelPath) {
             return false;
         }
 
-        // YOLOv5 ONNX export thường dùng tên "images" và "output"
-        // Dùng tên cố định thay vì lấy từ model (tránh lỗi API)
-        inputNameStr_ = "images";
-        outputNameStr_ = "output";
+        // Lấy tên input/output từ model (thay vì dùng tên cố định)
+        // Dùng AllocatorWithDefaultOptions để lấy tên
+        Ort::AllocatorWithDefaultOptions allocator;
+        
+        // Lấy tên input
+        auto inputName = session_->GetInputNameAllocated(0, allocator);
+        inputNameStr_ = std::string(inputName.get());
+        
+        // Lấy tên output
+        auto outputName = session_->GetOutputNameAllocated(0, allocator);
+        outputNameStr_ = std::string(outputName.get());
+        
         inputNames_.push_back(inputNameStr_.c_str());
         outputNames_.push_back(outputNameStr_.c_str());
+        
+        std::cout << "[LPDetector] Input name: " << inputNameStr_ << ", Output name: " << outputNameStr_ << std::endl;
 
         // Lấy shape input
         Ort::TypeInfo inputTypeInfo = session_->GetInputTypeInfo(0);

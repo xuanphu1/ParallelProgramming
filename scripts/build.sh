@@ -23,15 +23,19 @@ if command -v nvcc &> /dev/null; then
     
     # Xác định CUDA architecture dựa trên GPU (nếu có)
     if command -v nvidia-smi &> /dev/null; then
-        GPU_MODEL=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -1)
-        if [ ! -z "$GPU_MODEL" ]; then
+        GPU_MODEL=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1)
+        if [ ! -z "$GPU_MODEL" ] && [[ "$GPU_MODEL" =~ ^[0-9]+\.[0-9]+$ ]]; then
             echo "   GPU Compute Capability: $GPU_MODEL"
             # Convert compute capability to architecture (ví dụ: 7.5 -> sm_75)
             MAJOR=$(echo $GPU_MODEL | cut -d. -f1)
             MINOR=$(echo $GPU_MODEL | cut -d. -f2)
             CUDA_ARCH="sm_${MAJOR}${MINOR}"
             echo "   Sử dụng CUDA architecture: $CUDA_ARCH"
+        else
+            echo "   Không lấy được GPU compute capability, dùng mặc định: $CUDA_ARCH"
         fi
+    else
+        echo "   Không tìm thấy nvidia-smi, dùng mặc định: $CUDA_ARCH"
     fi
     echo ""
 else
@@ -94,6 +98,7 @@ CXX_FLAGS="$CXX_FLAGS -mavx2"    # AVX-256 for SIMD
 
 INCLUDES="-I$PROJECT_DIR/include"
 INCLUDES="$INCLUDES -I$ONNX_RUNTIME_DIR/include"
+INCLUDES="$INCLUDES $(pkg-config --cflags opencv4)"  # OpenCV include paths
 if [ "$HAS_CUDA" = true ]; then
     INCLUDES="$INCLUDES -I/usr/local/cuda/include"
 fi
@@ -141,7 +146,7 @@ if [ $? -eq 0 ]; then
     echo "✅ Build thành công!"
     echo "=========================================="
     echo ""
-    echo "Binary: $PROJECT_DIR/build/lp_main"
+    echo "Binary: $PROJECT_DIR/lp_main"
     echo ""
     
     if [ "$HAS_CUDA" = true ] && [ ! -z "$CUDA_OBJECT" ]; then
