@@ -1,8 +1,9 @@
 CXX = g++
 NVCC = nvcc
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2
+CXXFLAGS = -std=c++17 -Wall -Wextra -O3 -fopenmp -march=native
 NVCCFLAGS = -O2 -arch=sm_75 --compiler-options -fPIC -std=c++14
 CUDA_LDFLAGS = -lcudart
+OPENMP_LDFLAGS = -fopenmp
 
 # Tìm OpenCV
 OPENCV_CFLAGS = $(shell pkg-config --cflags opencv4 2>/dev/null || pkg-config --cflags opencv)
@@ -44,7 +45,8 @@ SRC_FILES = $(SRC_DIR)/main.cpp \
             $(SRC_DIR)/utils.cpp \
             $(SRC_DIR)/image_processing.cpp \
             $(SRC_DIR)/license_plate_detector.cpp \
-            $(SRC_DIR)/rtsp_client.cpp
+            $(SRC_DIR)/rtsp_client.cpp \
+            $(SRC_DIR)/parallel_pipeline.cpp
 
 CUDA_SOURCE = $(CUDA_DIR)/sobel_cuda.cu
 CUDA_OBJ = $(CUDA_DIR)/sobel_cuda.o
@@ -64,7 +66,7 @@ $(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 # Link everything together
 $(TARGET): $(OBJ_FILES) $(CUDA_OBJ)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJ_FILES) $(CUDA_OBJ) $(LIBS) $(CUDA_LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJ_FILES) $(CUDA_OBJ) $(LIBS) $(CUDA_LDFLAGS) $(OPENMP_LDFLAGS)
 
 run: $(TARGET)
 	LD_LIBRARY_PATH=$(ONNXRUNTIME_LIB):$$LD_LIBRARY_PATH ./$(TARGET)

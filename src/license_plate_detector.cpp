@@ -5,6 +5,9 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 using namespace cv;
 using namespace std;
@@ -15,10 +18,17 @@ LicensePlateDetector::LicensePlateDetector(const string& detector_path, const st
       memory_info(MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault)),
       ocr_config(config) {
     
-    // Session options
+    // Session options - Tối đa hóa threading cho ONNX Runtime
     SessionOptions session_options;
-    session_options.SetIntraOpNumThreads(1);
+    // IntraOp: số threads cho operations trong một node (matrix multiplication, convolution, etc.)
+    // Đã set 8 threads để song song hóa các operations trong model
+    session_options.SetIntraOpNumThreads(8);
+    // InterOp: số threads để chạy các nodes song song (nếu model cho phép)
+    // Cho phép chạy nhiều nodes song song khi có thể
+    session_options.SetInterOpNumThreads(4);
     session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+    // Enable CPU memory arena để tái sử dụng memory hiệu quả hơn
+    session_options.EnableCpuMemArena();
     
     // Load detector model
     cout << "🔄 Loading detector model: " << detector_path << endl;
@@ -211,8 +221,12 @@ vector<uint8_t> LicensePlateDetector::preprocess_ocr(const Mat& plate_roi, int p
         cvtColor(gray, img_rgb, COLOR_GRAY2RGB);
     }
     
-    // Convert to uint8 vector (HWC format)
+    // Convert to uint8 vector (HWC format) - Song song hóa với OpenMP
     vector<uint8_t> input_tensor(ocr_config.img_height * ocr_config.img_width * 3);
+    
+    #ifdef _OPENMP
+    #pragma omp parallel for collapse(2)
+    #endif
     for (int h = 0; h < ocr_config.img_height; h++) {
         for (int w = 0; w < ocr_config.img_width; w++) {
             Vec3b pixel = img_rgb.at<Vec3b>(h, w);

@@ -6,6 +6,9 @@
 #include <cuda_runtime.h>
 #include <cmath>
 #include <algorithm>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 using namespace cv;
 
@@ -131,10 +134,13 @@ double calculate_edge_score(const Mat& image, double threshold) {
     cuda_count_edges(abs_grad_x.data, abs_grad_y.data, &edge_pixels, width, height, threshold);
     cuda_err = cudaGetLastError();
     
-    // Nếu CUDA fail hoặc kết quả = 0 (có thể do CUDA không chạy), fallback về CPU
+    // Nếu CUDA fail hoặc kết quả = 0 (có thể do CUDA không chạy), fallback về CPU với OpenMP
     if (cuda_err != cudaSuccess || edge_pixels == 0) {
-        // Fallback: Tính trên CPU để đảm bảo có kết quả
+        // Fallback: Tính trên CPU với OpenMP để song song hóa
         edge_pixels = 0;
+        #ifdef _OPENMP
+        #pragma omp parallel for reduction(+:edge_pixels) collapse(2)
+        #endif
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 double magnitude = abs_grad_x.at<uchar>(y, x) + abs_grad_y.at<uchar>(y, x);
@@ -183,8 +189,12 @@ std::tuple<std::vector<float>, float, std::pair<float, float>> preprocess_letter
     Mat img_rgb;
     cvtColor(img_padded, img_rgb, COLOR_BGR2RGB);
     
-    // HWC to CHW và normalize về [0, 1]
+    // HWC to CHW và normalize về [0, 1] - Song song hóa với OpenMP
     std::vector<float> input_tensor(input_size * input_size * 3);
+    
+    #ifdef _OPENMP
+    #pragma omp parallel for collapse(3)
+    #endif
     for (int c = 0; c < 3; c++) {
         for (int h = 0; h < input_size; h++) {
             for (int w = 0; w < input_size; w++) {

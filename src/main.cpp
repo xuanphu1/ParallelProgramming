@@ -4,6 +4,7 @@
 #include "../include/license_plate_detector.h"
 #include "../include/image_processing.h"
 #include "../include/rtsp_client.h"
+#include "../include/parallel_pipeline.h"
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <vector>
@@ -99,6 +100,26 @@ int main(int argc, char* argv[]) {
         }
     }
     
+    // Kiểm tra có dùng parallel pipeline không
+    bool use_parallel_pipeline = false;
+    const char* env_parallel = getenv("USE_PARALLEL_PIPELINE");
+    if (env_parallel) {
+        string env_val = env_parallel;
+        if (env_val == "1" || env_val == "true" || env_val == "TRUE" || env_val == "on" || env_val == "ON") {
+            use_parallel_pipeline = true;
+        }
+    }
+    
+    // Kiểm tra command line argument
+    for (int i = 1; i < argc; i++) {
+        string arg = argv[i];
+        if (arg == "--parallel" || arg == "-p") {
+            use_parallel_pipeline = true;
+        } else if (arg == "--sequential" || arg == "-s") {
+            use_parallel_pipeline = false;
+        }
+    }
+    
     // Set global flags
     USE_GAMMA_CORRECTION = use_gamma;
     GAMMA_VALUE = gamma_val;
@@ -142,6 +163,15 @@ int main(int argc, char* argv[]) {
     }
     
     cout << "📹 RTSP stream đã mở. Nhấn 'q' để thoát" << endl;
+    
+    // Chọn pipeline: song song hoặc tuần tự
+    if (use_parallel_pipeline) {
+        cout << "\n🚀 Sử dụng Parallel Pipeline (Task Parallelism)" << endl;
+        ParallelPipeline pipeline(&detector, &cap);
+        pipeline.start();
+        pipeline.wait();
+    } else {
+        cout << "\n📊 Sử dụng Sequential Pipeline" << endl;
     cout << "🔧 Confidence threshold: Detector=0.4" << endl;
     cout << "🔧 Gamma Correction: " << (USE_GAMMA_CORRECTION ? "BẬT" : "TẮT") << endl;
     if (USE_GAMMA_CORRECTION) {
@@ -152,6 +182,7 @@ int main(int argc, char* argv[]) {
     if (USE_SOBEL_OCR_ENHANCEMENT) {
         cout << "🔧 Sobel Enhancement Strength: " << SOBEL_ENHANCEMENT_STRENGTH << endl;
     }
+    cout << "🚀 Pipeline Mode: " << (use_parallel_pipeline ? "PARALLEL (4 threads)" : "SEQUENTIAL") << endl;
     
     // Tạo thư mục lưu ảnh đã filter nếu được bật
     if ((USE_GAMMA_CORRECTION || USE_SOBEL_OCR_ENHANCEMENT) && SAVE_FILTERED_IMAGES) {
@@ -383,8 +414,9 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    cap.release();
-    destroyAllWindows();
+        cap.release();
+        destroyAllWindows();
+    }
     
     cout << "✅ Test hoàn thành!" << endl;
     
