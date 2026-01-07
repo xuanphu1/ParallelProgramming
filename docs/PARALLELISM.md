@@ -71,7 +71,7 @@ Dự án áp dụng cả **Data Parallelism** và **Task Parallelism** để tă
 
 ---
 
-## Cách chạy (song song bật sẵn)
+## Cách chạy (song song bật sẵn)s
 ```bash
 # Mặc định parallel pipeline
 ./scripts/run_test_onnx.sh
