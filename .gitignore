@@ -41,6 +41,12 @@ data/*.jpg
 data/*.png
 data/*.mp4
 
+# Video files (anywhere)
+*.mp4
+*.avi
+*.mov
+*.mkv
+
 # Temporary
 *.tmp
 *.bak
